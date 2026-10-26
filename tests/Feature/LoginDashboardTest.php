@@ -3,6 +3,7 @@
 namespace Tests\Feature;
 
 use App\Models\User;
+use Database\Seeders\DemoSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
@@ -93,6 +94,18 @@ class LoginDashboardTest extends TestCase
             ->assertSee('Produk dari database');
     }
 
+    public function test_dashboard_displays_products_seeded_by_demo_seeder(): void
+    {
+        $this->seed(DemoSeeder::class);
+        $this->actingAs($this->createUser());
+
+        $this->get(route('dashboard'))
+            ->assertOk()
+            ->assertSee('AMD Ryzen 5 5600')
+            ->assertSee('NVIDIA GeForce RTX 4060')
+            ->assertSee('Foto belum tersedia');
+    }
+
     public function test_user_can_log_out(): void
     {
         $user = $this->createUser();
@@ -140,7 +153,7 @@ class LoginDashboardTest extends TestCase
             'kondisi' => 'baru',
             'masa_garansi_bulan' => 12,
             'deskripsi' => 'Data produk untuk pengujian.',
-            'gambar_url' => 'https://example.com/products/demo.jpg',
+            'gambar_path' => 'products/demo.jpg',
             'rating_rata_rata' => 4.50,
             'is_active' => true,
             'created_at' => $now,

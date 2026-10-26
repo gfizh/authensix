@@ -40,6 +40,7 @@
     padding: 0 10px; height: 38px;
   }
   .search input { flex: 1; border: 0; outline: 0; font: inherit; min-width: 0; background: transparent; }
+  .search button { display: grid; place-items: center; }
   .search:focus-within { outline: 2px solid var(--accent); outline-offset: 2px; }
   .nav-spacer { flex: 1; }
   .icon { width: 22px; height: 22px; stroke: currentColor; fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
@@ -109,6 +110,14 @@
     height: 100%;
     object-fit: contain;
   }
+  .image-placeholder {
+    display: grid;
+    width: 100%;
+    height: 100%;
+    place-items: center;
+    color: var(--muted);
+    font-size: 12px;
+  }
   .name {
     font-size: 13.5px;
     white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
@@ -143,10 +152,15 @@
     </svg>
 </a>
 
-  <label class="search">
-    <svg class="icon" style="width:18px;height:18px" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
-    <input type="search" aria-label="Cari produk">
-  </label>
+  <form class="search" role="search" method="GET" action="{{ route('dashboard') }}">
+    <button type="submit" aria-label="Cari">
+      <svg class="icon" style="width:18px;height:18px" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
+    </button>
+    <input type="search" name="search" value="{{ request('search') }}" aria-label="Cari produk">
+    @if (request()->filled('category'))
+      <input type="hidden" name="category" value="{{ request('category') }}">
+    @endif
+  </form>
 
   <span class="nav-spacer"></span>
 
@@ -170,19 +184,29 @@
 
   <!-- Tab kategori -->
   <nav class="tabs" id="categories" aria-label="Kategori produk">
-    <button type="button" class="tab active" data-category="all">Semua</button>
+    <a href="{{ route('dashboard', array_filter(['search' => request('search')])) }}"
+       class="tab {{ request()->filled('category') ? '' : 'active' }}">Semua</a>
     @foreach ($categories as $category)
-      <button type="button" class="tab" data-category="{{ $category->nama_kategori }}">
+      <a href="{{ route('dashboard', array_filter(['search' => request('search'), 'category' => $category->id_kategori])) }}"
+         class="tab {{ (string) request('category') === (string) $category->id_kategori ? 'active' : '' }}">
         {{ $category->nama_kategori }}
-      </button>
+      </a>
     @endforeach
   </nav>
 
+  @if (request()->filled('search'))
+    <h1>Hasil pencarian: {{ request('search') }}</h1>
+  @endif
+
   <section class="products" id="products" aria-label="Daftar produk">
     @forelse ($products as $product)
-      <a href="{{ route('produk.detail', $product->id_produk) }}" class="card" data-category="{{ $product->kategori->nama_kategori }}">
+      <a href="{{ route('produk.detail', $product->id_produk) }}" class="card">
         <div class="thumb">
-          <img src="{{ $product->gambar_url }}" alt="{{ $product->nama_produk }}">
+          @if ($product->gambar_path && \Illuminate\Support\Facades\Storage::disk('public')->exists($product->gambar_path))
+            <img src="{{ $product->gambar_url }}" alt="{{ $product->nama_produk }}">
+          @else
+            <div class="image-placeholder" role="img" aria-label="Foto belum tersedia">Foto belum tersedia</div>
+          @endif
         </div>
         <div class="name">{{ $product->nama_produk }}</div>
         <div class="category">{{ $product->kategori->nama_kategori }}</div>
@@ -194,42 +218,15 @@
         <div class="review">({{ $product->ulasan_count }} Ulasan)</div>
       </a>
     @empty
-      <p>Belum ada produk yang tersedia.</p>
+      <p>Belum ada produk yang cocok.</p>
     @endforelse
   </section>
-  <p class="empty-products" id="empty-products" hidden>Belum ada produk dalam kategori ini.</p>
   @if ($products->hasPages())
     <div class="pagination">{{ $products->links() }}</div>
   @endif
 </main>
 
 <script>
-  const productsContainer = document.getElementById("products");
-  const categoriesContainer = document.getElementById("categories");
-  const products = [...productsContainer.querySelectorAll(".card")];
-  const emptyMessage = document.getElementById("empty-products");
-
-  categoriesContainer.addEventListener("click", event => {
-    const button = event.target.closest("button[data-category]");
-
-    if (!button || !categoriesContainer.contains(button)) {
-      return;
-    }
-
-    categoriesContainer.querySelector(".active")?.classList.remove("active");
-    button.classList.add("active");
-    const category = button.dataset.category;
-    let visibleProducts = 0;
-
-    products.forEach(product => {
-      const isVisible = category === "all" || product.dataset.category === category;
-      product.hidden = !isVisible;
-      visibleProducts += Number(isVisible);
-    });
-
-    emptyMessage.hidden = visibleProducts > 0;
-  });
-
   // Carousel
   const slides = document.querySelectorAll(".slide");
   let idx = 0;
