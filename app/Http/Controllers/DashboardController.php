@@ -18,6 +18,7 @@ class DashboardController extends Controller
 
         $products = Produk::query()
             ->with(['kategori', 'merek'])
+            ->withCount('ulasan')
             ->where('is_active', true)
             ->when(
                 filled($filters['search'] ?? null),

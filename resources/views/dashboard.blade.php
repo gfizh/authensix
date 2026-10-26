@@ -94,6 +94,7 @@
     gap: 20px;
   }
   .card { display: block; }
+  .card[hidden] { display: none; }
   .thumb {
     aspect-ratio: 1 / 0.8;
     width: 100%;
@@ -169,110 +170,65 @@
 
   <!-- Tab kategori -->
   <nav class="tabs" id="categories" aria-label="Kategori produk">
+    <button type="button" class="tab active" data-category="all">Semua</button>
+    @foreach ($categories as $category)
+      <button type="button" class="tab" data-category="{{ $category->nama_kategori }}">
+        {{ $category->nama_kategori }}
+      </button>
+    @endforeach
   </nav>
 
-  <!-- Daftar produk (diisi lewat JS) -->
-  <section class="products" id="products" aria-label="Daftar produk"></section>
+  <section class="products" id="products" aria-label="Daftar produk">
+    @forelse ($products as $product)
+      <a href="{{ route('produk.detail', $product->id_produk) }}" class="card" data-category="{{ $product->kategori->nama_kategori }}">
+        <div class="thumb">
+          <img src="{{ $product->gambar_url }}" alt="{{ $product->nama_produk }}">
+        </div>
+        <div class="name">{{ $product->nama_produk }}</div>
+        <div class="category">{{ $product->kategori->nama_kategori }}</div>
+        <div class="price">Rp. {{ number_format((float) $product->harga, 0, ',', '.') }}</div>
+        <div class="meta">
+          <span class="star">★</span>{{ number_format((float) $product->rating_rata_rata, 1) }}
+          <span class="sep"></span>{{ $product->jumlah_terjual }} Terjual
+        </div>
+        <div class="review">({{ $product->ulasan_count }} Ulasan)</div>
+      </a>
+    @empty
+      <p>Belum ada produk yang tersedia.</p>
+    @endforelse
+  </section>
+  <p class="empty-products" id="empty-products" hidden>Belum ada produk dalam kategori ini.</p>
+  @if ($products->hasPages())
+    <div class="pagination">{{ $products->links() }}</div>
+  @endif
 </main>
 
 <script>
- const products = [
-  {
-    nama: "Gigabyte GeForce RTX 5060 Ti Eagle Ice",
-    kategori: "Kartu Grafis",
-    gambar: "{{ asset('images/2.png') }}",
-    harga: 8500000,
-    rating: 5.0,
-    terjual: 3,
-    ulasan: 1
-  },
-  {
-    nama: "Gigabyte GeForce RTX 5060 Ti Eagle OC",
-    kategori: "Kartu Grafis",
-    gambar: "{{ asset('images/2a.png') }}",
-    harga: 9000000,
-    rating: 4.9,
-    terjual: 5,
-    ulasan: 2
-  },
-  {
-    nama: "PC Gaming RGB",
-    kategori: "PC Prebuild",
-    gambar: "{{ asset('images/3.png') }}",
-    harga: 12500000,
-    rating: 4.0,
-    terjual: 10,
-    ulasan: 3
-  },
-  {
-    nama: "Monitor Dell 24 inci FHD IPS 100Hz",
-    kategori: "Monitor",
-    gambar: "{{ asset('images/4.png') }}",
-    harga: 1800000,
-    rating: 4.8,
-    terjual: 8,
-    ulasan: 4
-  },
-  {
-    nama: "Laptop Lenovo LOQ Gaming",
-    kategori: "Laptop",
-    gambar: "{{ asset('images/5.png') }}",
-    harga: 13500000,
-    rating: 4.9,
-    terjual: 12,
-    ulasan: 6
-  },
-];
-
-  const rupiah = n => "Rp. " + n.toLocaleString("id-ID");
   const productsContainer = document.getElementById("products");
   const categoriesContainer = document.getElementById("categories");
-  const categories = @json($categories->pluck('nama_kategori')->values());
-  const categoryFilters = ["Semua", ...categories];
-
-  categoriesContainer.innerHTML = categoryFilters.map(category => `
-    <button type="button" class="tab${category === "Semua" ? " active" : ""}" data-category="${category}">
-      ${category}
-    </button>
-  `).join("");
-
-  const renderProducts = category => {
-    const filteredProducts = category === "Semua"
-      ? products
-      : products.filter(product => product.kategori === category);
-
-    productsContainer.innerHTML = filteredProducts.length
-      ? filteredProducts.map(p => `
-      <a href="#" class="card">
-        <div class="thumb">
-          <img src="${p.gambar}" alt="${p.nama}">
-        </div>
-        <div class="name">${p.nama}</div>
-        <div class="category">${p.kategori}</div>
-        <div class="price">${rupiah(p.harga)}</div>
-        <div class="meta">
-          <span class="star">★</span>${p.rating.toFixed(1)}
-          <span class="sep"></span>${p.terjual} Terjual
-        </div>
-        <div class="review">(${p.ulasan} Ulasan)</div>
-      </a>
-    `).join("")
-      : `<p class="empty-products">Belum ada produk dalam kategori ${category}.</p>`;
-  };
+  const products = [...productsContainer.querySelectorAll(".card")];
+  const emptyMessage = document.getElementById("empty-products");
 
   categoriesContainer.addEventListener("click", event => {
     const button = event.target.closest("button[data-category]");
 
-    if (!button) {
+    if (!button || !categoriesContainer.contains(button)) {
       return;
     }
 
     categoriesContainer.querySelector(".active")?.classList.remove("active");
     button.classList.add("active");
-    renderProducts(button.dataset.category);
-  });
+    const category = button.dataset.category;
+    let visibleProducts = 0;
 
-  renderProducts("Semua");
+    products.forEach(product => {
+      const isVisible = category === "all" || product.dataset.category === category;
+      product.hidden = !isVisible;
+      visibleProducts += Number(isVisible);
+    });
+
+    emptyMessage.hidden = visibleProducts > 0;
+  });
 
   // Carousel
   const slides = document.querySelectorAll(".slide");
