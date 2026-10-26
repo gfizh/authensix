@@ -41,7 +41,7 @@ return new class extends Migration
 
             $table->integer('masa_garansi_bulan');
             $table->text('deskripsi');
-            $table->string('gambar_url');
+            $table->string('gambar_path')->nullable();
             $table->decimal('rating_rata_rata', 3, 2);
             $table->boolean('is_active');
 

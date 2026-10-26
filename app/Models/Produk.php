@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\Storage;
 
 class Produk extends Model
 {
@@ -21,10 +22,13 @@ class Produk extends Model
         'kondisi',
         'masa_garansi_bulan',
         'deskripsi',
-        'gambar_url',
+        'gambar_path',
         'rating_rata_rata',
         'is_active',
     ];
+
+    // URL gambar ditambahkan otomatis ke hasil JSON API.
+    protected $appends = ['gambar_url'];
 
     protected function casts(): array
     {
@@ -40,34 +44,70 @@ class Produk extends Model
         ];
     }
 
+    /**
+     * Menghasilkan URL publik dari path foto lokal.
+     */
+    public function getGambarUrlAttribute(): ?string
+    {
+        if (empty($this->gambar_path)) {
+            return null;
+        }
+
+        return asset('storage/' . $this->gambar_path);
+    }
+
     public function kategori()
     {
-        return $this->belongsTo(Kategori::class, 'id_kategori', 'id_kategori');
+        return $this->belongsTo(
+            Kategori::class,
+            'id_kategori',
+            'id_kategori'
+        );
     }
 
     public function merek()
     {
-        return $this->belongsTo(Merek::class, 'id_merek', 'id_merek');
+        return $this->belongsTo(
+            Merek::class,
+            'id_merek',
+            'id_merek'
+        );
     }
 
     public function spesifikasi()
     {
-        return $this->hasMany(SpesifikasiProduk::class, 'id_produk', 'id_produk');
+        return $this->hasMany(
+            SpesifikasiProduk::class,
+            'id_produk',
+            'id_produk'
+        );
     }
 
     public function itemKeranjang()
     {
-        return $this->hasMany(ItemKeranjang::class, 'id_produk', 'id_produk');
+        return $this->hasMany(
+            ItemKeranjang::class,
+            'id_produk',
+            'id_produk'
+        );
     }
 
     public function itemPesanan()
     {
-        return $this->hasMany(ItemPesanan::class, 'id_produk', 'id_produk');
+        return $this->hasMany(
+            ItemPesanan::class,
+            'id_produk',
+            'id_produk'
+        );
     }
 
     public function ulasan()
     {
-        return $this->hasMany(Ulasan::class, 'id_produk', 'id_produk');
+        return $this->hasMany(
+            Ulasan::class,
+            'id_produk',
+            'id_produk'
+        );
     }
 
     public function prebuildParent()
