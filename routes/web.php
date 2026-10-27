@@ -3,6 +3,8 @@
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\LoginController;
 use App\Models\Kategori;
+use App\Models\Pesanan;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
@@ -30,7 +32,35 @@ Route::view('/checkout', 'checkout')
     ->middleware('auth')
     ->name('checkout');
 
-Route::view('/checkout/berhasil', 'checkout-berhasil')
+Route::get('/checkout/berhasil', function (Request $request) {
+    $orderId = $request->query('order_id');
+    $orderNumber = $request->query('order');
+
+    $query = Pesanan::with([
+        'items.produk',
+        'invoice',
+        'pembayaran',
+        'pengiriman',
+        'alamat',
+    ])
+        ->where('id_user', auth()->id());
+
+    if ($orderId) {
+        $order = (clone $query)->where('id_pesanan', $orderId)->first();
+    } elseif ($orderNumber) {
+        $order = (clone $query)->where('nomor_pesanan', $orderNumber)->first();
+    } else {
+        $order = null;
+    }
+
+    if (! $order) {
+        $order = $query->latest('id_pesanan')->first();
+    }
+
+    return view('checkout-berhasil', [
+        'order' => $order,
+    ]);
+})
     ->middleware('auth')
     ->name('checkout.success');
 
@@ -64,3 +94,20 @@ Route::get('/kategori', function () {
 })
     ->middleware('auth')
     ->name('kategori');
+
+Route::get('/keranjang', function () {
+    $items = collect([
+        ['id' => 1, 'nama' => 'GIGABYTE VGA NVIDIA GEFORCE RTX 5060 TI EAGLE ICE 16GB GDDR7 OC WHITE', 'varian' => '16GB GDDR7 OC', 'harga' => 12430000, 'qty' => 1, 'stok' => 1],
+        ['id' => 2, 'nama' => 'Hardisk PC/Laptop 160GB SATA', 'varian' => null, 'harga' => 250000, 'qty' => 2, 'stok' => 10],
+        ['id' => 3, 'nama' => 'Monitor PC 24inch Multimedia', 'varian' => 'Hitam', 'harga' => 1500000, 'qty' => 1, 'stok' => 4],
+    ])->map(fn ($i) => (object) $i);
+
+    return view('cart', ['items' => $items]);
+})->name('cart.index');
+
+// Route placeholder supaya route('...') di Blade tidak error.
+// Belum menyimpan apa-apa, hanya kembali ke halaman keranjang.
+Route::patch('/keranjang/{id}', fn () => back())->name('cart.update');
+Route::delete('/keranjang/{id}', fn () => back())->name('cart.destroy');
+Route::delete('/keranjang', fn () => back())->name('cart.clear');
+Route::post('/checkout', fn () => back())->name('checkout');

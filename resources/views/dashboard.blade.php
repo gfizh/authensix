@@ -7,17 +7,18 @@
 <style>
   :root {
     --bg: #ffffff;
-    --text: #111111;
-    --muted: #666666;
-    --line: #e5e5e5;
-    --placeholder: #e9e9ec;
-    --accent: #1f6fd6;
+    --text: #0f172a;
+    --muted: #64748b;
+    --line: #e2e8f0;
+    --placeholder: #f8fafc;
+    --accent: #1673e6;
   }
   * { box-sizing: border-box; margin: 0; padding: 0; }
   body {
     font-family: "Inter", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
     color: var(--text);
     background: var(--bg);
+    -webkit-font-smoothing: antialiased;
   }
   button { font: inherit; color: inherit; background: none; border: 0; cursor: pointer; }
   a { color: inherit; text-decoration: none; }
@@ -28,32 +29,38 @@
     display: flex; align-items: center; gap: 16px;
     padding: 14px 24px;
     border-bottom: 1px solid var(--line);
+    background: #ffffff;
   }
-  .logo { font-size: 22px; font-weight: 700; letter-spacing: -0.5px; white-space: nowrap; }
+  .logo { font-size: 22px; font-weight: 750; letter-spacing: -0.5px; white-space: nowrap; }
   .logo b { color: var(--accent); }
-  .logo small { display: block; font-size: 8px; font-weight: 500; letter-spacing: 3px; text-align: center; color: var(--muted); }
-  .kategori { font-weight: 600; font-size: 15px; display: flex; align-items: center; gap: 6px; }
+  .logo small { display: block; font-size: 8px; font-weight: 500; letter-spacing: 3px; text-align: center; color: var(--muted); margin-top: -2px; }
+  .kategori { font-weight: 600; font-size: 14.5px; display: flex; align-items: center; gap: 6px; color: var(--text); transition: color 0.15s ease; }
+  .kategori:hover { color: var(--accent); }
   .search {
-    flex: 1; max-width: 290px;
+    flex: 1; max-width: 320px;
     display: flex; align-items: center; gap: 8px;
-    border: 1.5px solid var(--text); border-radius: 8px;
+    border: 1.5px solid #cbd5e1; border-radius: 8px;
     padding: 0 10px; height: 38px;
+    background: #ffffff;
+    transition: border-color 0.15s ease, box-shadow 0.15s ease;
   }
-  .search input { flex: 1; border: 0; outline: 0; font: inherit; min-width: 0; background: transparent; }
-  .search button { display: grid; place-items: center; }
-  .search:focus-within { outline: 2px solid var(--accent); outline-offset: 2px; }
+  .search input { flex: 1; border: 0; outline: 0; font: inherit; min-width: 0; background: transparent; color: var(--text); font-size: 13px; }
+  .search button { display: grid; place-items: center; color: var(--muted); }
+  .search:focus-within { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(22, 115, 230, 0.12); }
   .nav-spacer { flex: 1; }
   .icon { width: 22px; height: 22px; stroke: currentColor; fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
 
-  main { padding: 12px 24px 40px; max-width: 1100px; margin: 0 auto; }
+  main { padding: 16px 24px 48px; max-width: 1100px; margin: 0 auto; }
 
   /* ---------- Carousel ---------- */
   .carousel {
     position: relative;
-    height: 215px;
-    border: 1px solid #333; border-radius: 12px;
+    height: 225px;
+    border: 1px solid rgba(0, 0, 0, 0.08);
+    border-radius: 14px;
     overflow: hidden;
     background: var(--placeholder);
+    box-shadow: 0 4px 20px -4px rgba(0, 0, 0, 0.06);
   }
   .carousel > img {
     display: block;
@@ -66,49 +73,100 @@
   .slide.active { display: flex; }
   .arrow {
     position: absolute; top: 50%; transform: translateY(-50%);
-    width: 36px; height: 36px; border-radius: 50%;
+    width: 38px; height: 38px; border-radius: 50%;
+    background: rgba(255, 255, 255, 0.88);
+    backdrop-filter: blur(6px);
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.12);
+    border: 1px solid rgba(255, 255, 255, 0.6);
+    color: #1e293b;
     display: grid; place-items: center;
+    transition: all 0.2s ease;
   }
-  .arrow:hover { background: rgba(255,255,255,.6); }
-  .arrow.prev { left: 10px; }
-  .arrow.next { right: 10px; }
+  .arrow:hover {
+    background: #ffffff;
+    transform: translateY(-50%) scale(1.06);
+    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.18);
+  }
+  .arrow.prev { left: 12px; }
+  .arrow.next { right: 12px; }
 
   /* ---------- Kategori tab ---------- */
   .tabs {
-    display: flex; gap: 24px; align-items: center;
+    display: flex; gap: 20px; align-items: center;
     padding: 18px 4px 14px;
     overflow-x: auto;
     scrollbar-width: none;
   }
   .tabs::-webkit-scrollbar { display: none; }
-  .tab { color: inherit; font-size: 15px; font-weight: 500; white-space: nowrap; padding: 0 0 4px; border-bottom: 2px solid transparent; }
-  .tab:hover { border-color: var(--line); }
+  .tab {
+    color: var(--muted);
+    font-size: 14.5px;
+    font-weight: 500;
+    white-space: nowrap;
+    padding: 4px 2px 8px;
+    border-bottom: 2.5px solid transparent;
+    transition: color 0.15s ease, border-color 0.15s ease;
+  }
+  .tab:hover {
+    color: var(--accent);
+    border-color: #cbd5e1;
+  }
   .tab.active {
     color: var(--accent);
+    font-weight: 650;
     border-color: var(--accent);
+  }
+
+  /* ---------- Search Title ---------- */
+  .search-title {
+    font-size: 18px;
+    font-weight: 650;
+    color: #1e293b;
+    margin: 8px 0 16px;
   }
 
   /* ---------- Produk ---------- */
   .products {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
-    gap: 20px;
+    grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+    gap: 16px;
   }
-  .card { display: block; }
+  .card {
+    display: flex;
+    flex-direction: column;
+    padding: 10px;
+    border-radius: 12px;
+    border: 1px solid #f1f5f9;
+    background: #ffffff;
+    transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+  }
+  .card:hover {
+    border-color: #cbd5e1;
+    box-shadow: 0 8px 24px -4px rgba(0, 0, 0, 0.07);
+    transform: translateY(-2px);
+  }
   .card[hidden] { display: none; }
   .thumb {
-    aspect-ratio: 1 / 0.8;
+    aspect-ratio: 1 / 0.85;
     width: 100%;
-    background: var(--placeholder);
+    background: #f8fafc;
     border-radius: 8px;
     margin-bottom: 10px;
     overflow: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 6px;
   }
   .thumb img {
     display: block;
     width: 100%;
     height: 100%;
     object-fit: contain;
+    transition: transform 0.25s ease;
+  }
+  .card:hover .thumb img {
+    transform: scale(1.04);
   }
   .image-placeholder {
     display: grid;
@@ -116,58 +174,63 @@
     height: 100%;
     place-items: center;
     color: var(--muted);
-    font-size: 12px;
+    font-size: 11.5px;
   }
   .name {
-    font-size: 13.5px;
-    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    font-size: 13px;
+    font-weight: 600;
+    color: #1e293b;
+    line-height: 1.4;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    min-height: 36px;
   }
-  .category { font-size: 11px; color: var(--muted); margin-top: 4px; }
-  .price { font-size: 14px; font-weight: 700; margin: 4px 0; }
-  .meta { display: flex; align-items: center; font-size: 11px; color: var(--muted); }
-  .meta .star { color: #f5b301; margin-right: 3px; font-size: 13px; }
-  .meta .sep { width: 1px; height: 12px; background: #bbb; margin: 0 6px; }
-  .review { font-size: 10.5px; color: #888; margin-top: 4px; }
+  .category { font-size: 11px; color: var(--muted); margin-top: 4px; font-weight: 500; }
+  .price { font-size: 14.5px; font-weight: 750; color: #0f172a; margin: 4px 0 2px; }
+  .meta {
+    display: flex;
+    align-items: center;
+    font-size: 11px;
+    color: #475569;
+    font-weight: 500;
+    margin-top: 4px;
+  }
+  .meta .star { color: #f59e0b; margin-right: 3px; font-size: 12px; }
+  .meta .sep { width: 1px; height: 10px; background: #cbd5e1; margin: 0 6px; }
+  .review { font-size: 10.5px; color: #94a3b8; margin-top: 2px; }
+
+  .empty-products {
+    grid-column: 1 / -1;
+    padding: 36px 20px;
+    border: 1.5px dashed #cbd5e1;
+    border-radius: 12px;
+    background: #f8fafc;
+    color: var(--muted);
+    font-size: 13px;
+    text-align: center;
+  }
+
+  .pagination {
+    margin-top: 24px;
+    display: flex;
+    justify-content: center;
+  }
 
   @media (max-width: 600px) {
     .navbar { flex-wrap: wrap; padding: 12px 16px; }
     .search { order: 5; max-width: none; flex-basis: 100%; }
-    main { padding: 12px 16px 32px; }
-    .carousel { height: 150px; }
+    main { padding: 12px 16px 36px; }
+    .carousel { height: 160px; }
+    .products { grid-template-columns: repeat(2, 1fr); gap: 12px; }
+    .card { padding: 8px; }
   }
 </style>
 </head>
 <body>
 
-<header class="navbar">
-  <a href="#" class="logo" aria-label="AuthenSIX Computer">
-    Authen<b>SIX</b>
-    <small>COMPUTER</small>
-  </a>
-
-  <a href="{{ route('kategori') }}" class="kategori" aria-haspopup="true">
-    Kategori
-    <svg class="icon" style="width:14px;height:14px" viewBox="0 0 24 24">
-        <path d="M6 9l6 6 6-6" fill="currentColor"/>
-    </svg>
-</a>
-
-  <form class="search" role="search" method="GET" action="{{ route('dashboard') }}">
-    <button type="submit" aria-label="Cari">
-      <svg class="icon" style="width:18px;height:18px" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
-    </button>
-    <input type="search" name="search" value="{{ request('search') }}" aria-label="Cari produk">
-    @if (request()->filled('category'))
-      <input type="hidden" name="category" value="{{ request('category') }}">
-    @endif
-  </form>
-
-  <span class="nav-spacer"></span>
-
-  <button aria-label="Keranjang">
-    <svg class="icon" viewBox="0 0 24 24"><circle cx="9" cy="20" r="1.5"/><circle cx="18" cy="20" r="1.5"/><path d="M2 3h3l2.6 12.4a1 1 0 0 0 1 .8h8.8a1 1 0 0 0 1-.8L20 7H6"/></svg>
-  </button>
-</header>
+@include('body.navbar')
 
 <main>
   <!-- Carousel -->
@@ -195,7 +258,7 @@
   </nav>
 
   @if (request()->filled('search'))
-    <h1>Hasil pencarian: {{ request('search') }}</h1>
+    <h1 class="search-title">Hasil pencarian: <span>{{ request('search') }}</span></h1>
   @endif
 
   <section class="products" id="products" aria-label="Daftar produk">
@@ -218,7 +281,7 @@
         <div class="review">({{ $product->ulasan_count }} Ulasan)</div>
       </a>
     @empty
-      <p>Belum ada produk yang cocok.</p>
+      <div class="empty-products">Belum ada produk yang cocok.</div>
     @endforelse
   </section>
   @if ($products->hasPages())

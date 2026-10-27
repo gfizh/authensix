@@ -24,21 +24,21 @@
     button, input, textarea { font: inherit; }
     :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
     .navbar {
-      min-height: 58px;
       display: flex;
       align-items: center;
-      gap: 28px;
-      padding: 8px 20px;
+      gap: 16px;
+      padding: 14px 24px;
       border-bottom: 1px solid #ededed;
     }
     .logo { font-size: 22px; font-weight: 750; letter-spacing: -1px; white-space: nowrap; }
     .logo b { color: #1673e6; }
     .logo small { display: block; margin-top: -4px; font-size: 7px; letter-spacing: 4px; text-align: center; }
-    .nav-label { font-size: 14px; }
-    .search { width: min(38vw, 315px); height: 30px; border: 1px solid #555; border-radius: 7px; }
-    .search input { width: 100%; height: 100%; padding: 0 9px; border: 0; background: transparent; }
+    .kategori { display: flex; align-items: center; gap: 6px; font-size: 14px; font-weight: 600; }
+    .search { flex: 1; max-width: 315px; display: flex; align-items: center; gap: 8px; height: 38px; padding: 0 10px; border: 1px solid #555; border-radius: 7px; }
+    .search button { display: grid; place-items: center; padding: 0; border: 0; background: transparent; cursor: pointer; }
+    .search input { flex: 1; width: 100%; min-width: 0; height: 100%; padding: 0; border: 0; outline: 0; background: transparent; }
+    .icon { width: 22px; height: 22px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
     .nav-spacer { flex: 1; }
-    .cart-icon { width: 25px; height: 25px; }
     main { max-width: 1180px; margin: 0 auto; padding: 40px 28px 60px; }
     h1 { margin: 0 0 14px; color: #5a5a5a; font-size: 20px; font-weight: 500; }
     .checkout-layout { display: grid; grid-template-columns: minmax(0, 1fr) 340px; align-items: start; gap: 22px; }
@@ -117,31 +117,16 @@
       .summary-list { max-height: 260px; }
     }
     @media (max-width: 480px) {
-      .navbar { gap: 14px; padding: 8px 12px; }
+      .navbar { flex-wrap: wrap; gap: 12px; padding: 12px 12px; }
       .logo { font-size: 19px; }
-      .search { flex: 1; width: auto; min-width: 40px; }
+      .search { order: 5; max-width: none; flex-basis: 100%; }
       .two-columns { grid-template-columns: 1fr 1fr; gap: 8px; }
       .form-card { padding: 12px; }
     }
   </style>
 </head>
 <body>
-  <header class="navbar">
-    <a href="{{ route('dashboard') }}" class="logo" aria-label="AuthenSIX Computer">
-      Authen<b>SIX</b>
-      <small>COMPUTER</small>
-    </a>
-    <span class="nav-label">Checkout ⌄</span>
-    <form class="search" action="{{ route('dashboard') }}" role="search">
-      <input type="search" name="search" aria-label="Cari produk">
-    </form>
-    <span class="nav-spacer"></span>
-    <a href="{{ route('checkout') }}" aria-label="Checkout">
-      <svg class="cart-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-        <circle cx="9" cy="20" r="1.5"/><circle cx="18" cy="20" r="1.5"/><path d="M2 3h3l2.6 12.4a1 1 0 0 0 1 .8h8.8a1 1 0 0 0 1-.8L20 7H6"/>
-      </svg>
-    </a>
-  </header>
+  @include('body.navbar')
 
   <main>
     <h1>Form Checkout</h1>
@@ -457,12 +442,9 @@
             pajak: 0
           })
         });
-        sessionStorage.setItem("checkoutOrder", JSON.stringify({
-          nomor: order.nomor_pesanan,
-          total: order.total_pembayaran,
-          status: order.status_pemesanan
-        }));
-        window.location.assign(api.success);
+        sessionStorage.setItem("checkoutOrder", JSON.stringify(order));
+        const redirectUrl = api.success + (order && order.id_pesanan ? '?order_id=' + encodeURIComponent(order.id_pesanan) : '');
+        window.location.assign(redirectUrl);
       } catch (error) {
         setError(error.message || "Checkout gagal. Silakan periksa kembali data Anda.");
         submitButton.disabled = displayedItems().length === 0;

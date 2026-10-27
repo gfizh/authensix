@@ -42,6 +42,7 @@
     padding: 0 10px; height: 38px;
   }
   .search input { flex: 1; border: 0; outline: 0; font: inherit; min-width: 0; background: transparent; }
+  .search button { display: grid; place-items: center; padding: 0; border: 0; background: transparent; }
   .search:focus-within { outline: 2px solid var(--accent); outline-offset: 2px; }
   .nav-spacer { flex: 1; }
   .icon { width: 22px; height: 22px; stroke: currentColor; fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
@@ -160,7 +161,7 @@
     @media (max-width: 560px) {
       .navbar { gap: 16px; padding: 8px 14px; }
       .logo { font-size: 19px; }
-      .nav-category { font-size: 12px; }
+      .kategori { font-size: 12px; }
       .search { flex: 1; width: auto; min-width: 35px; }
       main { padding: 24px 16px 40px; }
       .back-link { margin-bottom: 20px; }
@@ -174,22 +175,7 @@
   </style>
 </head>
 <body>
-  <header class="navbar">
-    <a href="{{ route('dashboard') }}" class="logo" aria-label="AuthenSIX Computer">
-      Authen<b>SIX</b>
-      <small>COMPUTER</small>
-    </a>
-    <a href="{{ route('kategori') }}" class="nav-category">Kategori ⌄</a>
-    <form class="search" action="{{ route('dashboard') }}" role="search">
-      <input type="search" name="search" aria-label="Cari produk" style="width: 100%; height: 100%; border: 0; background: transparent;">
-    </form>
-    <span class="nav-spacer"></span>
-    <button type="button" aria-label="Keranjang" style="padding: 0; border: 0; background: transparent;">
-      <svg class="cart-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-        <circle cx="9" cy="20" r="1.5"/><circle cx="18" cy="20" r="1.5"/><path d="M2 3h3l2.6 12.4a1 1 0 0 0 1 .8h8.8a1 1 0 0 0 1-.8L20 7H6"/>
-      </svg>
-    </button>
-  </header>
+  @include('body.navbar')
 
   <main>
     <a class="back-link" href="{{ route('dashboard') }}">← Kembali ke katalog</a>
