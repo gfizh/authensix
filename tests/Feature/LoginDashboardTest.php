@@ -66,11 +66,147 @@ class LoginDashboardTest extends TestCase
         ]);
 
         $this->actingAs($admin)
-            ->get(route('dashboard'))
+            ->get(route('admin.dashboard-admin'))
             ->assertOk()
             ->assertSee('Admin Utama')
-            ->assertSee('Administrator')
-            ->assertSee('@adminutama');
+            ->assertSee('administrator');
+    }
+
+    public function test_admin_user_is_redirected_to_admin_dashboard_after_login(): void
+    {
+        $admin = User::create([
+            'nama_lengkap' => 'Admin Utama',
+            'nomor_telepon' => '081111111111',
+            'username' => 'adminutama',
+            'password_hash' => Hash::make('secret123'),
+            'role' => 'admin',
+        ]);
+
+        $this->post(route('login.store'), [
+            'username' => 'adminutama',
+            'password' => 'secret123',
+        ])->assertRedirect(route('admin.dashboard-admin'));
+
+        $this->actingAs($admin)
+            ->get(route('admin.dashboard-admin'))
+            ->assertOk()
+            ->assertSee('Dashboard Admin')
+            ->assertSee('Ringkasan aktivitas toko dan penjualan')
+            ->assertSee('Total produk')
+            ->assertSee('Grafik Penjualan')
+            ->assertSee('Produk Terlaris')
+            ->assertSee('Produk Terbaru');
+    }
+
+    public function test_customer_cannot_access_admin_dashboard(): void
+    {
+        $customer = $this->createUser();
+
+        $this->actingAs($customer)
+            ->get(route('admin.dashboard-admin'))
+            ->assertForbidden();
+
+        $this->actingAs($customer)
+            ->get(route('admin.tambah_produk'))
+            ->assertForbidden();
+    }
+
+    public function test_admin_can_access_tambah_produk_page(): void
+    {
+        $admin = User::create([
+            'nama_lengkap' => 'Admin Utama',
+            'nomor_telepon' => '081111111111',
+            'username' => 'adminutama',
+            'password_hash' => Hash::make('secret123'),
+            'role' => 'admin',
+        ]);
+
+        $this->actingAs($admin)
+            ->get(route('admin.tambah_produk'))
+            ->assertOk()
+            ->assertSee('Tambah Produk')
+            ->assertSee('Informasi produk')
+            ->assertSee('Harga &amp; Stok', false)
+            ->assertSee('Gambar produk')
+            ->assertSee('Ringkasan produk');
+    }
+
+    public function test_admin_can_store_new_product_from_form(): void
+    {
+        $admin = User::create([
+            'nama_lengkap' => 'Admin Utama',
+            'nomor_telepon' => '081111111111',
+            'username' => 'adminutama',
+            'password_hash' => Hash::make('secret123'),
+            'role' => 'admin',
+        ]);
+
+        $categoryId = DB::table('kategori')->insertGetId([
+            'nama_kategori' => 'Mouse Gaming',
+            'slug' => 'mouse-gaming',
+            'deskripsi' => 'Aksesoris gaming',
+        ]);
+
+        $brandId = DB::table('merek')->insertGetId([
+            'nama_merek' => 'Logitech G',
+            'logo_url' => '',
+        ]);
+
+        $response = $this->actingAs($admin)->post(route('admin.products.store'), [
+            'nama_produk' => 'Logitech G Pro X Superlight',
+            'id_kategori' => $categoryId,
+            'id_merek' => $brandId,
+            'deskripsi' => 'Mouse gaming wireless ultra-ringan.',
+            'harga' => 1950000,
+            'harga_diskon' => 1750000,
+            'stok' => 15,
+            'berat' => 63,
+        ]);
+
+        $response->assertRedirect(route('admin.dashboard-admin'));
+
+        $this->assertDatabaseHas('produk', [
+            'nama_produk' => 'Logitech G Pro X Superlight',
+            'id_kategori' => $categoryId,
+            'id_merek' => $brandId,
+            'harga' => 1950000,
+            'stok' => 15,
+            'is_active' => true,
+        ]);
+    }
+
+    public function test_admin_visiting_customer_dashboard_is_redirected_to_admin_dashboard(): void
+    {
+        $admin = User::create([
+            'nama_lengkap' => 'Admin Utama',
+            'nomor_telepon' => '081111111111',
+            'username' => 'adminutama',
+            'password_hash' => Hash::make('secret123'),
+            'role' => 'admin',
+        ]);
+
+        $this->actingAs($admin)
+            ->get(route('dashboard'))
+            ->assertRedirect(route('admin.dashboard-admin'));
+    }
+
+    public function test_admin_visiting_home_or_login_is_redirected_to_admin_dashboard(): void
+    {
+        $admin = User::create([
+            'nama_lengkap' => 'Admin Utama',
+            'nomor_telepon' => '081111111111',
+            'username' => 'adminutama',
+            'password_hash' => Hash::make('secret123'),
+            'role' => 'admin',
+        ]);
+
+        $this->actingAs($admin)
+            ->get(route('home'))
+            ->assertRedirect(route('admin.dashboard-admin'));
+
+        $this->actingAs($admin)
+            ->get(route('login'))
+            ->assertRedirect(route('admin.dashboard-admin'));
     }
 
     public function test_invalid_credentials_return_to_login_with_an_error(): void

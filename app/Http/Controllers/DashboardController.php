@@ -5,12 +5,15 @@ namespace App\Http\Controllers;
 use App\Models\Kategori;
 use App\Models\Produk;
 use Illuminate\Http\Request;
-use Illuminate\View\View;
 
 class DashboardController extends Controller
 {
-    public function __invoke(Request $request): View
+    public function __invoke(Request $request)
     {
+        if ($request->user()?->isAdmin()) {
+            return redirect()->route('admin.dashboard-admin');
+        }
+
         $filters = $request->validate([
             'search' => ['nullable', 'string', 'max:100'],
             'category' => ['nullable', 'integer', 'exists:kategori,id_kategori'],

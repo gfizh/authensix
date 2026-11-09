@@ -17,15 +17,20 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->statefulApi();
         $middleware->redirectTo(
             guests: '/login',
-            users: '/dashboard',
+            users: function (Request $request) {
+                if ($request->user()?->isAdmin()) {
+                    return route('admin.dashboard-admin');
+                }
+
+                return route('dashboard');
+            },
         );
 
         $middleware->alias([
-        'admin' => EnsureUserIsAdmin::class,
+            'admin' => EnsureUserIsAdmin::class,
         ]);
     })
 
-    
     ->withExceptions(function (Exceptions $exceptions): void {
         $exceptions->shouldRenderJsonWhen(
             fn (Request $request) => $request->is('api/*') || $request->expectsJson(),

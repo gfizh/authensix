@@ -15,18 +15,19 @@ class LoginController extends Controller
             'password' => ['required', 'string'],
         ]);
 
-        if (!Auth::attempt($credentials)) {
+        if (! Auth::attempt($credentials)) {
             return back()
                 ->withErrors([
-                    'username' => 'Username atau password salah.'
+                    'username' => 'Username atau password salah.',
                 ])
                 ->onlyInput('username');
         }
 
         $request->session()->regenerate();
+        $request->session()->forget('url.intended');
 
         if ($request->user()->isAdmin()) {
-            return redirect()->route('admin.dashboard');
+            return redirect()->route('admin.dashboard-admin');
         }
 
         return redirect()->route('dashboard');

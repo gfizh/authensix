@@ -1,28 +1,31 @@
-
 <?php
 
-use Illuminate\Support\Facades\Auth;
+use App\Http\Controllers\Admin\BrandController as AdminBrandController;
+use App\Http\Controllers\Admin\CategoryController as AdminCategoryController;
+use App\Http\Controllers\Admin\DashboardController as AdminDashboardController;
+use App\Http\Controllers\Admin\OrderController as AdminOrderController;
 use App\Http\Controllers\Admin\PaymentController;
+use App\Http\Controllers\Admin\ProductController as AdminProductController;
 use App\Http\Controllers\Admin\ReviewController;
 use App\Http\Controllers\Admin\ShipmentController;
 use App\Http\Controllers\Admin\UserController as AdminUserController;
-use App\Http\Controllers\Admin\OrderController as AdminOrderController;
-use App\Http\Controllers\Admin\CategoryController as AdminCategoryController;
-use App\Http\Controllers\Admin\BrandController as AdminBrandController;
-use App\Http\Controllers\Admin\ProductController as AdminProductController;
-use App\Http\Controllers\Admin\DashboardController as AdminDashboardController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\LoginController;
 use App\Models\Kategori;
 use App\Models\Pesanan;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
 
 // =====================================================
 // PUBLIC & AUTHENTICATION
 // =====================================================
 
-Route::get('/', function () {
+Route::get('/', function (Request $request) {
+    if ($request->user()?->isAdmin()) {
+        return redirect()->route('admin.dashboard-admin');
+    }
+
     return redirect()->route('login');
 })->name('home');
 
@@ -38,7 +41,6 @@ Route::post('/logout', [LoginController::class, 'destroy'])
     ->middleware('auth')
     ->name('logout');
 
-
 // =====================================================
 // CUSTOMER DASHBOARD
 // =====================================================
@@ -46,7 +48,6 @@ Route::post('/logout', [LoginController::class, 'destroy'])
 Route::get('/dashboard', DashboardController::class)
     ->middleware('auth')
     ->name('dashboard');
-
 
 // =====================================================
 // PRODUCT DETAIL & CATEGORY
@@ -83,7 +84,6 @@ Route::get('/kategori', function () {
 })
     ->middleware('auth')
     ->name('kategori');
-
 
 // =====================================================
 // CART
@@ -134,7 +134,6 @@ Route::delete('/keranjang', fn () => back())
     ->middleware('auth')
     ->name('cart.clear');
 
-
 // =====================================================
 // CHECKOUT
 // =====================================================
@@ -179,10 +178,13 @@ Route::get('/checkout/berhasil', function (Request $request) {
     ->middleware('auth')
     ->name('checkout.success');
 
-
 // =====================================================
 // ADMIN MANAGEMENT
 // =====================================================
+
+Route::get('/dashboard-admin', function () {
+    return redirect()->route('admin.dashboard-admin');
+})->middleware(['auth', 'admin'])->name('dashboard.admin');
 
 Route::middleware(['auth', 'admin'])
     ->prefix('admin')
@@ -193,8 +195,13 @@ Route::middleware(['auth', 'admin'])
         Route::get('/dashboard', AdminDashboardController::class)
             ->name('dashboard');
 
+        Route::get('/dashboard-admin', AdminDashboardController::class)
+            ->name('dashboard-admin');
 
         // Product Management
+        Route::get('/tambah_produk', [AdminProductController::class, 'create'])
+            ->name('tambah_produk');
+
         Route::resource('products', AdminProductController::class)
             ->except(['show', 'destroy'])
             ->parameters(['products' => 'produk']);
@@ -204,18 +211,15 @@ Route::middleware(['auth', 'admin'])
             'updateStatus',
         ])->name('products.status');
 
-
         // Category Management
         Route::resource('categories', AdminCategoryController::class)
             ->except(['show'])
             ->parameters(['categories' => 'kategori']);
 
-
         // Brand Management
         Route::resource('brands', AdminBrandController::class)
             ->except(['show'])
             ->parameters(['brands' => 'merek']);
-
 
         // Order Management
         Route::get('/orders', [AdminOrderController::class, 'index'])
@@ -239,11 +243,9 @@ Route::middleware(['auth', 'admin'])
             'updateShipment',
         ])->name('orders.shipment.update');
 
-
         // User Management
         Route::resource('users', AdminUserController::class)
             ->only(['index', 'show', 'edit', 'update']);
-
 
         // Shipment Management
         Route::resource('shipments', ShipmentController::class)
@@ -255,12 +257,10 @@ Route::middleware(['auth', 'admin'])
             'updateStatus',
         ])->name('shipments.status');
 
-
         // Review Management
         Route::resource('reviews', ReviewController::class)
             ->only(['index', 'show', 'destroy'])
             ->parameters(['reviews' => 'ulasan']);
-
 
         // Payment Management
         Route::resource('payments', PaymentController::class)

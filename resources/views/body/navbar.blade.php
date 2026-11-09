@@ -26,4 +26,22 @@
   <a href="{{ route('cart.index') }}" aria-label="Keranjang">
     <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="9" cy="20" r="1.5"/><circle cx="18" cy="20" r="1.5"/><path d="M2 3h3l2.6 12.4a1 1 0 0 0 1 .8h8.8a1 1 0 0 0 1-.8L20 7H6"/></svg>
   </a>
+
+  @auth
+    @if (auth()->user()->isAdmin())
+      <a href="{{ route('admin.dashboard-admin') }}" class="admin-pill" style="font-size: 12px; font-weight: 600; background: #e0f2fe; color: #0284c7; padding: 5px 10px; border-radius: 6px; text-decoration: none;">
+        Panel Admin
+      </a>
+    @endif
+    <form method="POST" action="{{ route('logout') }}" style="display: inline-flex; align-items: center; margin-left: 4px;">
+      @csrf
+      <button type="submit" title="Keluar" aria-label="Keluar" style="color: #64748b; padding: 4px; display: inline-flex; align-items: center; cursor: pointer;">
+        <svg class="icon" style="width: 20px; height: 20px;" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">
+          <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
+          <polyline points="16 17 21 12 16 7"/>
+          <line x1="21" y1="12" x2="9" y2="12"/>
+        </svg>
+      </button>
+    </form>
+  @endauth
 </header>

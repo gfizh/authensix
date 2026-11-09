@@ -6,8 +6,8 @@ use App\Http\Controllers\Controller;
 use App\Models\Kategori;
 use App\Models\Merek;
 use App\Models\Produk;
-use Illuminate\Http\Request;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\Rule;
 use Illuminate\View\View;
@@ -17,8 +17,12 @@ class ProductController extends Controller
     /**
      * Menampilkan seluruh produk.
      */
-    public function index(Request $request): View
+    public function index(Request $request): View|RedirectResponse
     {
+        if (! view()->exists('admin.products.index')) {
+            return redirect()->route('admin.dashboard-admin');
+        }
+
         $filters = $request->validate([
             'search' => ['nullable', 'string', 'max:100'],
             'status' => ['nullable', Rule::in(['all', 'active', 'inactive'])],
@@ -29,7 +33,7 @@ class ProductController extends Controller
             ->when(
                 filled($filters['search'] ?? null),
                 function ($query) use ($filters) {
-                    $search = '%' . $filters['search'] . '%';
+                    $search = '%'.$filters['search'].'%';
 
                     $query->where(function ($subQuery) use ($search) {
                         $subQuery->where('nama_produk', 'like', $search)
@@ -57,9 +61,11 @@ class ProductController extends Controller
      */
     public function create(): View
     {
-        return view('admin.products.create', [
-            'categories' => Kategori::query()->get(),
-            'brands' => Merek::query()->get(),
+        $viewName = view()->exists('admin.tambah_produk') ? 'admin.tambah_produk' : 'admin.products.create';
+
+        return view($viewName, [
+            'categories' => Kategori::query()->orderBy('nama_kategori')->get(),
+            'brands' => Merek::query()->orderBy('nama_merek')->get(),
         ]);
     }
 
@@ -68,6 +74,26 @@ class ProductController extends Controller
      */
     public function store(Request $request): RedirectResponse
     {
+        // Lengkapi default field skema yang tidak terdapat di form UI
+        if (! $request->filled('sku') && $request->filled('nama_produk')) {
+            $cleanName = strtoupper(preg_replace('/[^A-Za-z0-9]/', '', substr($request->nama_produk, 0, 8)));
+            $cleanName = $cleanName ?: 'PRD';
+            $sku = 'PRD-'.$cleanName.'-'.rand(100, 999);
+            while (Produk::where('sku', $sku)->exists()) {
+                $sku = 'PRD-'.$cleanName.'-'.rand(100, 999);
+            }
+            $request->merge(['sku' => $sku]);
+        }
+        if (! $request->filled('tipe_produk')) {
+            $request->merge(['tipe_produk' => 'regular']);
+        }
+        if (! $request->filled('kondisi')) {
+            $request->merge(['kondisi' => 'baru']);
+        }
+        if (! $request->filled('masa_garansi_bulan')) {
+            $request->merge(['masa_garansi_bulan' => 12]);
+        }
+
         $data = $request->validate($this->rules());
 
         if ($request->hasFile('gambar')) {
@@ -76,6 +102,8 @@ class ProductController extends Controller
         }
 
         unset($data['gambar']);
+        unset($data['harga_diskon']);
+        unset($data['berat']);
 
         // Nilai awal dikelola oleh sistem.
         $data['jumlah_terjual'] = 0;
@@ -85,7 +113,7 @@ class ProductController extends Controller
         Produk::create($data);
 
         return redirect()
-            ->route('admin.products.index')
+            ->route('admin.dashboard-admin')
             ->with('success', 'Produk berhasil ditambahkan.');
     }
 
