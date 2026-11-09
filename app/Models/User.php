@@ -31,6 +31,11 @@ class User extends Authenticatable
             'updated_at' => 'datetime',
         ];
     }
+    
+    public function isAdmin()
+    {
+        return $this->role === "admin";
+    }
 
     public function alamatPengiriman()
     {
