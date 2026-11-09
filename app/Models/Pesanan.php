@@ -8,6 +8,7 @@ class Pesanan extends Model
 {
     protected $table = 'pesanan';
     protected $primaryKey = 'id_pesanan';
+
     public $timestamps = false;
 
     protected $fillable = [
@@ -33,11 +34,17 @@ class Pesanan extends Model
         ];
     }
 
+    // Relasi ke pengguna
     public function user()
     {
-        return $this->belongsTo(User::class, 'id_user', 'id_user');
+        return $this->belongsTo(
+            User::class,
+            'id_user',
+            'id_user'
+        );
     }
 
+    // Relasi ke alamat pengiriman
     public function alamat()
     {
         return $this->belongsTo(
@@ -47,23 +54,62 @@ class Pesanan extends Model
         );
     }
 
+    // Relasi ke item pesanan
     public function items()
     {
-        return $this->hasMany(ItemPesanan::class, 'id_pesanan', 'id_pesanan');
+        return $this->hasMany(
+            ItemPesanan::class,
+            'id_pesanan',
+            'id_pesanan'
+        );
     }
 
+    // Relasi ke pembayaran
     public function pembayaran()
     {
-        return $this->hasOne(Pembayaran::class, 'id_pesanan', 'id_pesanan');
+        return $this->hasOne(
+            Pembayaran::class,
+            'id_pesanan',
+            'id_pesanan'
+        );
     }
 
+    // Relasi ke invoice
     public function invoice()
     {
-        return $this->hasOne(Invoice::class, 'id_pesanan', 'id_pesanan');
+        return $this->hasOne(
+            Invoice::class,
+            'id_pesanan',
+            'id_pesanan'
+        );
     }
 
+    // Relasi ke pengiriman
     public function pengiriman()
     {
-        return $this->hasOne(Pengiriman::class, 'id_pesanan', 'id_pesanan');
+        return $this->hasOne(
+            Pengiriman::class,
+            'id_pesanan',
+            'id_pesanan'
+        );
+    }
+
+
+    public function produk()
+    {
+        return $this->belongsTo(
+            Produk::class,
+            'id_produk',
+            'id_produk'
+        );
+    }
+
+    public function pesanan()
+    {
+        return $this->belongsTo(
+            Pesanan::class,
+            'id_pesanan',
+            'id_pesanan'
+        );
     }
 }
