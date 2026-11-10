@@ -791,7 +791,6 @@
     </div>
 
     <nav class="sidebar-nav">
-      <!-- Dashboard Link -->
       <a href="{{ route('admin.dashboard-admin') }}" class="nav-item">
         <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor">
           <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
@@ -800,14 +799,32 @@
         <span>Dashboard</span>
       </a>
 
-      <!-- Active Product Link -->
-      <a href="{{ route('admin.tambah_produk') }}" class="nav-item active" aria-current="page">
+      <a href="{{ route('admin.manajemen_produk', ['tab' => 'pesanan']) }}" class="nav-item">
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+          <path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2"/>
+          <rect x="9" y="3" width="6" height="4" rx="1"/>
+          <path d="M9 12h6"/>
+          <path d="M9 16h6"/>
+        </svg>
+        <span>Manajemen Pesanan</span>
+      </a>
+
+      <a href="{{ route('admin.manajemen_produk', ['tab' => 'produk']) }}" class="nav-item">
         <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor">
           <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/>
           <polyline points="3.27 6.96 12 12.01 20.73 6.96"/>
           <line x1="12" y1="22.08" x2="12" y2="12"/>
         </svg>
         <span>Product</span>
+      </a>
+
+      <a href="{{ route('admin.tambah_produk') }}" class="nav-item active" aria-current="page">
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+          <circle cx="12" cy="12" r="9"/>
+          <line x1="12" y1="8" x2="12" y2="16"/>
+          <line x1="8" y1="12" x2="16" y2="12"/>
+        </svg>
+        <span>Tambah Produk</span>
       </a>
     </nav>
 
@@ -841,13 +858,14 @@
   <div class="app-main">
 
     <!-- Top Navbar with Breadcrumb -->
+    @php $isEdit = isset($product); @endphp
     <header class="top-header">
       <nav class="breadcrumb-nav" aria-label="Breadcrumb">
         <a href="{{ route('admin.dashboard-admin') }}">Dashboard</a>
         <span class="breadcrumb-sep">&gt;</span>
-        <a href="{{ route('admin.tambah_produk') }}">Produk</a>
+        <a href="{{ route('admin.manajemen_produk', ['tab' => 'produk']) }}">Produk</a>
         <span class="breadcrumb-sep">&gt;</span>
-        <span class="breadcrumb-current">Tambah Produk</span>
+        <span class="breadcrumb-current">{{ $isEdit ? 'Edit Produk' : 'Tambah Produk' }}</span>
       </nav>
 
       <div class="header-right">
@@ -893,9 +911,9 @@
               <polyline points="12 19 5 12 12 5"/>
             </svg>
           </a>
-          <h1>Tambah Produk</h1>
+          <h1>{{ $isEdit ? 'Edit Produk' : 'Tambah Produk' }}</h1>
         </div>
-        <p>Lengkapi informasi berikut untuk menambahkan produk baru.</p>
+        <p>{{ $isEdit ? 'Perbarui informasi produk berikut sesuai kebutuhan.' : 'Lengkapi informasi berikut untuk menambahkan produk baru.' }}</p>
       </div>
 
       <!-- Blue Info Banner -->
@@ -903,7 +921,7 @@
         <svg class="info-banner-icon" viewBox="0 0 20 20">
           <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"/>
         </svg>
-        <span>Anda sedang menambahkan : <b>produk baru</b></span>
+        <span>Anda sedang {{ $isEdit ? 'mengubah' : 'menambahkan' }} : <b>{{ $isEdit ? $product->nama_produk : 'produk baru' }}</b></span>
       </div>
 
       <!-- Validation Error Display -->
@@ -918,15 +936,18 @@
         </div>
       @endif
 
-      <!-- Add Product Form -->
-      <form action="{{ route('admin.products.store') }}" method="POST" enctype="multipart/form-data" id="formTambahProduk">
+      <!-- Add / Edit Product Form -->
+      <form action="{{ $isEdit ? route('admin.products.update', $product->id_produk) : route('admin.products.store') }}" method="POST" enctype="multipart/form-data" id="formTambahProduk">
         @csrf
+        @if ($isEdit)
+          @method('PUT')
+        @endif
 
         <!-- Hidden Database Requirements -->
-        <input type="hidden" name="sku" id="skuField" value="{{ old('sku') }}">
-        <input type="hidden" name="tipe_produk" value="regular">
-        <input type="hidden" name="kondisi" value="baru">
-        <input type="hidden" name="masa_garansi_bulan" value="12">
+        <input type="hidden" name="sku" id="skuField" value="{{ old('sku', $product->sku ?? '') }}">
+        <input type="hidden" name="tipe_produk" value="{{ old('tipe_produk', $product->tipe_produk ?? 'regular') }}">
+        <input type="hidden" name="kondisi" value="{{ old('kondisi', $product->kondisi ?? 'baru') }}">
+        <input type="hidden" name="masa_garansi_bulan" value="{{ old('masa_garansi_bulan', $product->masa_garansi_bulan ?? 12) }}">
 
         <div class="form-grid">
 
@@ -945,7 +966,7 @@
                   id="inputNama"
                   class="form-input"
                   placeholder=""
-                  value="{{ old('nama_produk') }}"
+                  value="{{ old('nama_produk', $product->nama_produk ?? '') }}"
                   required
                 >
               </div>
@@ -954,9 +975,9 @@
                 <label class="form-label" for="selectBrand">Brand</label>
                 <div class="select-wrap">
                   <select name="id_merek" id="selectBrand" class="form-select" required>
-                    <option value="" disabled {{ old('id_merek') ? '' : 'selected' }}>Pilih Brand</option>
+                    <option value="" disabled {{ old('id_merek', $product->id_merek ?? null) ? '' : 'selected' }}>Pilih Brand</option>
                     @foreach ($brands as $brand)
-                      <option value="{{ $brand->id_merek }}" {{ old('id_merek') == $brand->id_merek ? 'selected' : '' }}>
+                      <option value="{{ $brand->id_merek }}" {{ (string) old('id_merek', $product->id_merek ?? '') === (string) $brand->id_merek ? 'selected' : '' }}>
                         {{ $brand->nama_merek }}
                       </option>
                     @endforeach
@@ -971,9 +992,9 @@
                 <label class="form-label" for="selectKategori">Kategori</label>
                 <div class="select-wrap">
                   <select name="id_kategori" id="selectKategori" class="form-select" required>
-                    <option value="" disabled {{ old('id_kategori') ? '' : 'selected' }}>Pilih Kategori</option>
+                    <option value="" disabled {{ old('id_kategori', $product->id_kategori ?? null) ? '' : 'selected' }}>Pilih Kategori</option>
                     @foreach ($categories as $cat)
-                      <option value="{{ $cat->id_kategori }}" {{ old('id_kategori') == $cat->id_kategori ? 'selected' : '' }}>
+                      <option value="{{ $cat->id_kategori }}" {{ (string) old('id_kategori', $product->id_kategori ?? '') === (string) $cat->id_kategori ? 'selected' : '' }}>
                         {{ $cat->nama_kategori }}
                       </option>
                     @endforeach
@@ -992,7 +1013,7 @@
                   class="form-textarea"
                   placeholder=""
                   required
-                >{{ old('deskripsi') }}</textarea>
+                >{{ old('deskripsi', $product->deskripsi ?? '') }}</textarea>
               </div>
             </div>
 
@@ -1011,7 +1032,7 @@
                     min="0"
                     step="1"
                     placeholder=""
-                    value="{{ old('harga') }}"
+                    value="{{ old('harga', isset($product) ? (int) $product->harga : '') }}"
                     required
                   >
                 </div>
@@ -1040,7 +1061,7 @@
                     min="0"
                     step="1"
                     placeholder=""
-                    value="{{ old('stok') }}"
+                    value="{{ old('stok', $product->stok ?? '') }}"
                     required
                   >
                 </div>
@@ -1070,12 +1091,19 @@
             <div class="form-card">
               <h2 class="form-card-title">Gambar produk</h2>
 
+              @php
+                $hasExistingImg = $isEdit && $product->gambar_path && \Illuminate\Support\Facades\Storage::disk('public')->exists($product->gambar_path);
+              @endphp
               <div class="dropzone-box" id="dropzoneBox">
-                <div class="dropzone-placeholder" id="dropzonePlaceholder">
+                <div class="dropzone-placeholder" id="dropzonePlaceholder" @if($hasExistingImg) style="display:none;" @endif>
                   <div class="dropzone-title">Tidak ada gambar</div>
                   <div class="dropzone-desc">JPG, PNG, atau WEBP</div>
                 </div>
-                <img src="" alt="Preview Gambar" class="dropzone-preview" id="imagePreview">
+                <img src="{{ $hasExistingImg ? $product->gambar_url : '' }}"
+                     alt="Preview Gambar"
+                     class="dropzone-preview"
+                     id="imagePreview"
+                     @if($hasExistingImg) style="display:block;" @endif>
               </div>
 
               <input

@@ -238,7 +238,7 @@
       <svg class="icon" style="width:40px;height:40px;color:#bbb" viewBox="0 0 24 24"><circle cx="9" cy="20" r="1.5"/><circle cx="18" cy="20" r="1.5"/><path d="M2 3h3l2.6 12.4a1 1 0 0 0 1 .8h8.8a1 1 0 0 0 1-.8L20 7H6"/></svg>
       <h2 style="font-size:15px;margin-top:10px">Keranjang kamu masih kosong</h2>
       <p>Yuk, cari komponen PC dan perangkat favoritmu.</p>
-      <a href="{{ url('/katalog') }}" class="btn btn-primary">Mulai Belanja</a>
+      <a href="{{ route('dashboard') }}" class="btn btn-primary">Mulai Belanja</a>
     </div>
   @endforelse
 </main>

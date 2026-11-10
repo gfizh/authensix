@@ -1005,14 +1005,35 @@
         <span>Dashboard</span>
       </a>
 
+      <!-- Manajemen Pesanan Link -->
+      <a href="{{ route('admin.manajemen_produk', ['tab' => 'pesanan']) }}" class="nav-item">
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+          <path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2"/>
+          <rect x="9" y="3" width="6" height="4" rx="1"/>
+          <path d="M9 12h6"/>
+          <path d="M9 16h6"/>
+        </svg>
+        <span>Manajemen Pesanan</span>
+      </a>
+
       <!-- Product Link -->
-      <a href="{{ route('admin.tambah_produk') }}" class="nav-item">
+      <a href="{{ route('admin.manajemen_produk', ['tab' => 'produk']) }}" class="nav-item">
         <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor">
           <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/>
           <polyline points="3.27 6.96 12 12.01 20.73 6.96"/>
           <line x1="12" y1="22.08" x2="12" y2="12"/>
         </svg>
         <span>Product</span>
+      </a>
+
+      <!-- Tambah Produk Link -->
+      <a href="{{ route('admin.tambah_produk') }}" class="nav-item">
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+          <circle cx="12" cy="12" r="9"/>
+          <line x1="12" y1="8" x2="12" y2="16"/>
+          <line x1="8" y1="12" x2="16" y2="12"/>
+        </svg>
+        <span>Tambah Produk</span>
       </a>
     </nav>
 
@@ -1112,6 +1133,17 @@
           </a>
         </div>
       </div>
+
+      @if (session('success'))
+        <div style="background:#ecfdf5;border:1px solid #a7f3d0;color:#065f46;padding:12px 16px;border-radius:10px;font-size:13.5px;font-weight:500;margin-bottom:20px;">
+          {{ session('success') }}
+        </div>
+      @endif
+      @if (session('error'))
+        <div style="background:#fef2f2;border:1px solid #fecaca;color:#991b1b;padding:12px 16px;border-radius:10px;font-size:13.5px;font-weight:500;margin-bottom:20px;">
+          {{ session('error') }}
+        </div>
+      @endif
 
       <!-- =====================================================
            ROW 1: 4 STAT CARDS

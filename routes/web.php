@@ -11,6 +11,7 @@ use App\Http\Controllers\Admin\ShipmentController;
 use App\Http\Controllers\Admin\UserController as AdminUserController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\LoginController;
+use App\Http\Controllers\OrderHistoryController;
 use App\Models\Kategori;
 use App\Models\Pesanan;
 use Illuminate\Http\Request;
@@ -53,7 +54,7 @@ Route::get('/dashboard', DashboardController::class)
 // PRODUCT DETAIL & CATEGORY
 // =====================================================
 
-Route::view('/produk/{id}', 'detail-produk')
+Route::view('/produk/{id}', 'users.detail-produk')
     ->whereNumber('id')
     ->middleware('auth')
     ->name('produk.detail');
@@ -70,7 +71,7 @@ Route::get('/kategori', function () {
         ->orderBy('nama_kategori')
         ->get();
 
-    return view('kategori', [
+    return view('users.kategori', [
         'categories' => $categories,
         'emptyCategories' => [
             'Laptop',
@@ -117,7 +118,7 @@ Route::get('/keranjang', function () {
         ],
     ])->map(fn ($item) => (object) $item);
 
-    return view('cart', ['items' => $items]);
+    return view('users.cart', ['items' => $items]);
 })
     ->middleware('auth')
     ->name('cart.index');
@@ -138,7 +139,7 @@ Route::delete('/keranjang', fn () => back())
 // CHECKOUT
 // =====================================================
 
-Route::view('/checkout', 'checkout')
+Route::view('/checkout', 'users.checkout')
     ->middleware('auth')
     ->name('checkout');
 
@@ -171,12 +172,27 @@ Route::get('/checkout/berhasil', function (Request $request) {
         $order = $query->latest('id_pesanan')->first();
     }
 
-    return view('checkout-berhasil', [
+    return view('users.checkout-berhasil', [
         'order' => $order,
     ]);
 })
     ->middleware('auth')
     ->name('checkout.success');
+
+// =====================================================
+// CUSTOMER ORDER HISTORY
+// =====================================================
+
+Route::get('/riwayat-pesanan', [OrderHistoryController::class, 'index'])
+    ->middleware('auth')
+    ->name('riwayat-pesanan');
+
+Route::get('/users/riwayat-pesanan', fn () => redirect()->route('riwayat-pesanan'))
+    ->middleware('auth');
+
+Route::patch('/riwayat-pesanan/{pesanan}/batal', [OrderHistoryController::class, 'cancel'])
+    ->middleware('auth')
+    ->name('riwayat-pesanan.cancel');
 
 // =====================================================
 // ADMIN MANAGEMENT
@@ -197,6 +213,13 @@ Route::middleware(['auth', 'admin'])
 
         Route::get('/dashboard-admin', AdminDashboardController::class)
             ->name('dashboard-admin');
+
+        // Manajemen Pesanan & Produk
+        Route::get('/manajemen_produk', [AdminOrderController::class, 'index'])
+            ->name('manajemen_produk');
+
+        Route::get('/manajemen-pesanan', fn () => redirect()->route('admin.manajemen_produk'))
+            ->name('manajemen-pesanan');
 
         // Product Management
         Route::get('/tambah_produk', [AdminProductController::class, 'create'])

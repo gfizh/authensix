@@ -531,6 +531,11 @@
         <a href="{{ route('dashboard') }}" class="btn-return">
           <span aria-hidden="true">&larr;</span> Kembali ke katalog
         </a>
+
+        <a href="{{ route('riwayat-pesanan') }}"
+           style="display: flex; align-items: center; justify-content: center; width: 100%; height: 42px; margin-top: 10px; border: 1.5px solid #cbd5e1; border-radius: 12px; background: #ffffff; color: #1e293b; font-size: 13px; font-weight: 650; text-decoration: none;">
+          Lihat Riwayat Pesanan
+        </a>
       </div>
     </div>
   </main>

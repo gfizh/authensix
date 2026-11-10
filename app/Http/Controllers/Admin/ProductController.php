@@ -17,10 +17,10 @@ class ProductController extends Controller
     /**
      * Menampilkan seluruh produk.
      */
-    public function index(Request $request): View|RedirectResponse
+    public function index(Request $request): View
     {
-        if (! view()->exists('admin.products.index')) {
-            return redirect()->route('admin.dashboard-admin');
+        if (view()->exists('admin.manajemen_produk')) {
+            return app(OrderController::class)->index($request, 'produk');
         }
 
         $filters = $request->validate([
@@ -122,10 +122,12 @@ class ProductController extends Controller
      */
     public function edit(Produk $produk): View
     {
-        return view('admin.products.edit', [
+        $viewName = view()->exists('admin.products.edit') ? 'admin.products.edit' : 'admin.tambah_produk';
+
+        return view($viewName, [
             'product' => $produk,
-            'categories' => Kategori::query()->get(),
-            'brands' => Merek::query()->get(),
+            'categories' => Kategori::query()->orderBy('nama_kategori')->get(),
+            'brands' => Merek::query()->orderBy('nama_merek')->get(),
         ]);
     }
 
@@ -136,9 +138,18 @@ class ProductController extends Controller
         Request $request,
         Produk $produk
     ): RedirectResponse {
+        $request->merge([
+            'sku' => $request->input('sku', $produk->sku),
+            'tipe_produk' => $request->input('tipe_produk', $produk->tipe_produk),
+            'kondisi' => $request->input('kondisi', $produk->kondisi),
+            'masa_garansi_bulan' => $request->input('masa_garansi_bulan', $produk->masa_garansi_bulan),
+        ]);
+
         $data = $request->validate($this->rules($produk));
 
         unset($data['gambar']);
+        unset($data['harga_diskon']);
+        unset($data['berat']);
 
         $oldImagePath = $produk->gambar_path;
         $newImagePath = null;
@@ -158,7 +169,7 @@ class ProductController extends Controller
         }
 
         return redirect()
-            ->route('admin.products.index')
+            ->route('admin.manajemen_produk', ['tab' => 'produk'])
             ->with('success', 'Produk berhasil diperbarui.');
     }
 

@@ -40,7 +40,7 @@ class DashboardController extends Controller
             ->paginate(8)
             ->withQueryString();
 
-        return view('dashboard', [
+        return view('users.dashboard', [
             'categories' => Kategori::query()->orderBy('nama_kategori')->get(),
             'products' => $products,
         ]);

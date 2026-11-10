@@ -55,6 +55,17 @@ class LoginDashboardTest extends TestCase
             ->assertDontSee('https://example.com/products/demo.jpg');
     }
 
+    public function test_customer_pages_render_from_the_users_view_directory(): void
+    {
+        $this->actingAs($this->createUser());
+
+        $this->get(route('cart.index'))->assertOk();
+        $this->get(route('checkout.success'))->assertOk();
+        $this->get(route('dashboard'))->assertOk();
+        $this->get(route('produk.detail', 1))->assertOk();
+        $this->get(route('kategori'))->assertOk();
+    }
+
     public function test_admin_user_dashboard_shows_admin_badge(): void
     {
         $admin = User::create([

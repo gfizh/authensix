@@ -23,14 +23,23 @@
 
   <span class="nav-spacer"></span>
 
-  <a href="{{ route('cart.index') }}" aria-label="Keranjang">
+  <a href="{{ route('cart.index') }}" aria-label="Keranjang" title="Keranjang">
     <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="9" cy="20" r="1.5"/><circle cx="18" cy="20" r="1.5"/><path d="M2 3h3l2.6 12.4a1 1 0 0 0 1 .8h8.8a1 1 0 0 0 1-.8L20 7H6"/></svg>
   </a>
 
   @auth
     @if (auth()->user()->isAdmin())
-      <a href="{{ route('admin.dashboard-admin') }}" class="admin-pill" style="font-size: 12px; font-weight: 600; background: #e0f2fe; color: #0284c7; padding: 5px 10px; border-radius: 6px; text-decoration: none;">
+      <a href="{{ route('admin.dashboard-admin') }}" class="admin-pill" style="font-size: 12px; font-weight: 600; background: #e0f2fe; color: #0284c7; padding: 5px 10px; border-radius: 6px; text-decoration: none; white-space: nowrap;">
         Panel Admin
+      </a>
+    @else
+      <a href="{{ route('riwayat-pesanan') }}"
+         style="display: inline-flex; align-items: center; gap: 6px; font-size: 12.5px; font-weight: 600; padding: 6px 12px; border-radius: 8px; text-decoration: none; white-space: nowrap; {{ request()->routeIs('riwayat-pesanan') ? 'background: #1673e6; color: #ffffff;' : 'background: #eff6ff; color: #1673e6;' }}">
+        <svg style="width: 15px; height: 15px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round;" viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2"/>
+          <rect x="9" y="3" width="6" height="4" rx="1"/>
+        </svg>
+        <span>Riwayat Pesanan</span>
       </a>
     @endif
     <form method="POST" action="{{ route('logout') }}" style="display: inline-flex; align-items: center; margin-left: 4px;">
