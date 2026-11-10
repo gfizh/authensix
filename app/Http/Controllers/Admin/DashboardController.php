@@ -11,6 +11,7 @@ use App\Models\Produk;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\DB;
 use Illuminate\View\View;
 
 class DashboardController extends Controller
@@ -197,6 +198,26 @@ class DashboardController extends Controller
             ])
             ->sum('jumlah_bayar');
 
+        // Status pembayaran berdasarkan tanggal pembayaran atau tanggal pesanan terkait.
+        $pembayaranPeriodeCounts = Pembayaran::query()
+            ->where(function ($query) use ($periodeMulai, $periodeSelesai): void {
+                $query->whereBetween('tanggal_pembayaran', [
+                    $periodeMulai,
+                    $periodeSelesai,
+                ])->orWhere(function ($subQuery) use ($periodeMulai, $periodeSelesai): void {
+                    $subQuery->whereNull('tanggal_pembayaran')
+                        ->whereHas('pesanan', function ($orderQuery) use ($periodeMulai, $periodeSelesai): void {
+                            $orderQuery->whereBetween('tanggal_pesanan', [
+                                $periodeMulai,
+                                $periodeSelesai,
+                            ]);
+                        });
+                });
+            })
+            ->select('status_pembayaran', DB::raw('COUNT(*) as total'))
+            ->groupBy('status_pembayaran')
+            ->pluck('total', 'status_pembayaran');
+
         /*
         |--------------------------------------------------------------------------
         | 5. Statistik Utama Dashboard
@@ -291,31 +312,16 @@ class DashboardController extends Controller
                 $periodeSelesai,
             ])->where('status_pemesanan', 'dibatalkan')->count(),
 
-            // Status pembayaran berdasarkan waktu pembuatan pembayaran.
-            'total_pembayaran' => Pembayaran::whereBetween('created_at', [
-                $periodeMulai,
-                $periodeSelesai,
-            ])->count(),
+            // Status pembayaran berdasarkan tanggal pembayaran / tanggal pesanan terkait.
+            'total_pembayaran' => (int) $pembayaranPeriodeCounts->sum(),
 
-            'pembayaran_pending' => Pembayaran::whereBetween('created_at', [
-                $periodeMulai,
-                $periodeSelesai,
-            ])->where('status_pembayaran', 'pending')->count(),
+            'pembayaran_pending' => (int) ($pembayaranPeriodeCounts['pending'] ?? 0),
 
-            'pembayaran_dibayar' => Pembayaran::whereBetween('created_at', [
-                $periodeMulai,
-                $periodeSelesai,
-            ])->where('status_pembayaran', 'dibayar')->count(),
+            'pembayaran_dibayar' => (int) ($pembayaranPeriodeCounts['dibayar'] ?? 0),
 
-            'pembayaran_gagal' => Pembayaran::whereBetween('created_at', [
-                $periodeMulai,
-                $periodeSelesai,
-            ])->where('status_pembayaran', 'gagal')->count(),
+            'pembayaran_gagal' => (int) ($pembayaranPeriodeCounts['gagal'] ?? 0),
 
-            'pembayaran_expired' => Pembayaran::whereBetween('created_at', [
-                $periodeMulai,
-                $periodeSelesai,
-            ])->where('status_pembayaran', 'expired')->count(),
+            'pembayaran_expired' => (int) ($pembayaranPeriodeCounts['expired'] ?? 0),
 
             // Pendapatan hari ini.
             'pendapatan_hari_ini' => Pembayaran::where(
