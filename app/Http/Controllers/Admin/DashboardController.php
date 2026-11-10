@@ -9,23 +9,245 @@ use App\Models\Pembayaran;
 use App\Models\Pesanan;
 use App\Models\Produk;
 use App\Models\User;
+use Illuminate\Http\Request;
+use Illuminate\Support\Carbon;
 use Illuminate\View\View;
 
 class DashboardController extends Controller
 {
-    public function __invoke(): View
+    public function __invoke(Request $request): View
     {
         /*
         |--------------------------------------------------------------------------
-        | 1. Statistik Utama
+        | 1. Normalisasi Query Parameter
+        |--------------------------------------------------------------------------
+        */
+
+        $rangeInput = strtolower(
+            (string) $request->query('range', '7d')
+        );
+
+        $range = match ($rangeInput) {
+            '7', '7d' => '7d',
+            '30', '30d' => '30d',
+            'bulan', 'month' => 'month',
+            'tahun', 'year' => 'year',
+            default => '7d',
+        };
+
+        // Mendukung parameter view dan mode lama.
+        $viewInput = strtolower(
+            (string) $request->query(
+                'view',
+                $request->query('mode', 'daily')
+            )
+        );
+
+        $view = match ($viewInput) {
+            'weekly', 'mingguan' => 'weekly',
+            default => 'daily',
+        };
+
+        // Alias untuk kompatibilitas kode lama.
+        $mode = $view === 'weekly' ? 'mingguan' : 'harian';
+
+        /*
+        |--------------------------------------------------------------------------
+        | 2. Menentukan Periode dan Periode Sebelumnya
+        |--------------------------------------------------------------------------
+        */
+
+        $sekarang = now();
+
+        switch ($range) {
+            case '7d':
+            case '30d':
+
+                $jumlahHari = $range === '7d' ? 7 : 30;
+
+                $periodeMulai = $sekarang->copy()
+                    ->startOfDay()
+                    ->subDays($jumlahHari - 1);
+
+                $periodeSelesai = $sekarang->copy()
+                    ->endOfDay();
+
+                $periodeSebelumnyaMulai = $periodeMulai->copy()
+                    ->subDays($jumlahHari);
+
+                $periodeSebelumnyaSelesai = $periodeMulai->copy()
+                    ->subSecond();
+
+                break;
+
+            case 'month':
+
+                $periodeMulai = $sekarang->copy()
+                    ->startOfMonth();
+
+                $periodeSelesai = $sekarang->copy()
+                    ->endOfDay();
+
+                $periodeSebelumnyaMulai = $periodeMulai->copy()
+                    ->subMonthNoOverflow();
+
+                $periodeSebelumnyaSelesai = $periodeSelesai->copy()
+                    ->subMonthNoOverflow();
+
+                break;
+
+            case 'year':
+
+                $periodeMulai = $sekarang->copy()
+                    ->startOfYear();
+
+                $periodeSelesai = $sekarang->copy()
+                    ->endOfDay();
+
+                $periodeSebelumnyaMulai = $periodeMulai->copy()
+                    ->subYear();
+
+                $periodeSebelumnyaSelesai = $periodeSelesai->copy()
+                    ->subYear();
+
+                break;
+        }
+
+        /*
+        |--------------------------------------------------------------------------
+        | 3. Fungsi Persentase Pertumbuhan
+        |--------------------------------------------------------------------------
+        */
+
+        $hitungPersentase = function (
+            float|int $sekarang,
+            float|int $sebelumnya
+        ): float {
+            if ($sebelumnya <= 0) {
+                return $sekarang > 0 ? 100.0 : 0.0;
+            }
+
+            return round(
+                (($sekarang - $sebelumnya) / $sebelumnya) * 100,
+                2
+            );
+        };
+
+        /*
+        |--------------------------------------------------------------------------
+        | 4. Statistik Berdasarkan Periode
+        |--------------------------------------------------------------------------
+        */
+
+        // Produk yang ditambahkan pada periode terpilih.
+        $produkPeriodeIni = Produk::whereBetween('created_at', [
+            $periodeMulai,
+            $periodeSelesai,
+        ])->count();
+
+        $produkPeriodeSebelumnya = Produk::whereBetween('created_at', [
+            $periodeSebelumnyaMulai,
+            $periodeSebelumnyaSelesai,
+        ])->count();
+
+        // Pesanan berdasarkan tanggal pesanan.
+        $pesananPeriodeIni = Pesanan::whereBetween('tanggal_pesanan', [
+            $periodeMulai,
+            $periodeSelesai,
+        ])->count();
+
+        $pesananPeriodeSebelumnya = Pesanan::whereBetween('tanggal_pesanan', [
+            $periodeSebelumnyaMulai,
+            $periodeSebelumnyaSelesai,
+        ])->count();
+
+        // Pelanggan baru berdasarkan tanggal registrasi.
+        $pelangganPeriodeIni = User::where('role', 'customer')
+            ->whereBetween('created_at', [
+                $periodeMulai,
+                $periodeSelesai,
+            ])
+            ->count();
+
+        $pelangganPeriodeSebelumnya = User::where('role', 'customer')
+            ->whereBetween('created_at', [
+                $periodeSebelumnyaMulai,
+                $periodeSebelumnyaSelesai,
+            ])
+            ->count();
+
+        // Pendapatan hanya dari pembayaran berhasil.
+        $pendapatanPeriodeIni = Pembayaran::where(
+            'status_pembayaran',
+            'dibayar'
+        )
+            ->whereBetween('tanggal_pembayaran', [
+                $periodeMulai,
+                $periodeSelesai,
+            ])
+            ->sum('jumlah_bayar');
+
+        $pendapatanPeriodeSebelumnya = Pembayaran::where(
+            'status_pembayaran',
+            'dibayar'
+        )
+            ->whereBetween('tanggal_pembayaran', [
+                $periodeSebelumnyaMulai,
+                $periodeSebelumnyaSelesai,
+            ])
+            ->sum('jumlah_bayar');
+
+        /*
+        |--------------------------------------------------------------------------
+        | 5. Statistik Utama Dashboard
         |--------------------------------------------------------------------------
         */
 
         $stats = [
 
-            // Produk
-            'total_produk' => Produk::count(),
+            // Nilai empat kartu utama mengikuti periode terpilih.
+            'total_produk' => $produkPeriodeIni,
+            'total_pesanan' => $pesananPeriodeIni,
+            'total_pelanggan' => $pelangganPeriodeIni,
+            'total_pendapatan' => $pendapatanPeriodeIni,
 
+            // Total keseluruhan untuk referensi.
+            'total_produk_keseluruhan' => Produk::count(),
+
+            'total_pesanan_keseluruhan' => Pesanan::count(),
+
+            'total_pelanggan_keseluruhan' => User::where(
+                'role',
+                'customer'
+            )->count(),
+
+            'total_pendapatan_keseluruhan' => Pembayaran::where(
+                'status_pembayaran',
+                'dibayar'
+            )->sum('jumlah_bayar'),
+
+            // Pertumbuhan.
+            'persentase_produk' => $hitungPersentase(
+                $produkPeriodeIni,
+                $produkPeriodeSebelumnya
+            ),
+
+            'persentase_pesanan' => $hitungPersentase(
+                $pesananPeriodeIni,
+                $pesananPeriodeSebelumnya
+            ),
+
+            'persentase_pelanggan' => $hitungPersentase(
+                $pelangganPeriodeIni,
+                $pelangganPeriodeSebelumnya
+            ),
+
+            'persentase_pendapatan' => $hitungPersentase(
+                (float) $pendapatanPeriodeIni,
+                (float) $pendapatanPeriodeSebelumnya
+            ),
+
+            // Produk.
             'produk_aktif' => Produk::where('is_active', true)->count(),
 
             'produk_nonaktif' => Produk::where('is_active', false)->count(),
@@ -38,73 +260,75 @@ class DashboardController extends Controller
                 ->whereBetween('stok', [1, 5])
                 ->count(),
 
-            // Kategori dan Merek
+            // Kategori dan merek.
             'total_kategori' => Kategori::count(),
 
             'total_merek' => Merek::count(),
 
-            // Pesanan
-            'total_pesanan' => Pesanan::count(),
+            // Status pesanan.
+            'pesanan_pending' => Pesanan::whereBetween('tanggal_pesanan', [
+                $periodeMulai,
+                $periodeSelesai,
+            ])->where('status_pemesanan', 'pending')->count(),
 
-            'pesanan_pending' => Pesanan::where(
-                'status_pemesanan', 'pending'
-            )->count(),
+            'pesanan_diproses' => Pesanan::whereBetween('tanggal_pesanan', [
+                $periodeMulai,
+                $periodeSelesai,
+            ])->where('status_pemesanan', 'diproses')->count(),
 
-            'pesanan_diproses' => Pesanan::where(
-                'status_pemesanan', 'diproses'
-            )->count(),
+            'pesanan_dikirim' => Pesanan::whereBetween('tanggal_pesanan', [
+                $periodeMulai,
+                $periodeSelesai,
+            ])->where('status_pemesanan', 'dikirim')->count(),
 
-            'pesanan_dikirim' => Pesanan::where(
-                'status_pemesanan', 'dikirim'
-            )->count(),
+            'pesanan_selesai' => Pesanan::whereBetween('tanggal_pesanan', [
+                $periodeMulai,
+                $periodeSelesai,
+            ])->where('status_pemesanan', 'selesai')->count(),
 
-            'pesanan_selesai' => Pesanan::where(
-                'status_pemesanan', 'selesai'
-            )->count(),
+            'pesanan_dibatalkan' => Pesanan::whereBetween('tanggal_pesanan', [
+                $periodeMulai,
+                $periodeSelesai,
+            ])->where('status_pemesanan', 'dibatalkan')->count(),
 
-            'pesanan_dibatalkan' => Pesanan::where(
-                'status_pemesanan', 'dibatalkan'
-            )->count(),
+            // Status pembayaran berdasarkan waktu pembuatan pembayaran.
+            'total_pembayaran' => Pembayaran::whereBetween('created_at', [
+                $periodeMulai,
+                $periodeSelesai,
+            ])->count(),
 
-            // Pelanggan
-            'total_pelanggan' => User::where(
-                'role', 'customer'
-            )->count(),
+            'pembayaran_pending' => Pembayaran::whereBetween('created_at', [
+                $periodeMulai,
+                $periodeSelesai,
+            ])->where('status_pembayaran', 'pending')->count(),
 
-            // Pembayaran
-            'total_pembayaran' => Pembayaran::count(),
+            'pembayaran_dibayar' => Pembayaran::whereBetween('created_at', [
+                $periodeMulai,
+                $periodeSelesai,
+            ])->where('status_pembayaran', 'dibayar')->count(),
 
-            'pembayaran_pending' => Pembayaran::where(
-                'status_pembayaran', 'pending'
-            )->count(),
+            'pembayaran_gagal' => Pembayaran::whereBetween('created_at', [
+                $periodeMulai,
+                $periodeSelesai,
+            ])->where('status_pembayaran', 'gagal')->count(),
 
-            'pembayaran_dibayar' => Pembayaran::where(
-                'status_pembayaran', 'dibayar'
-            )->count(),
+            'pembayaran_expired' => Pembayaran::whereBetween('created_at', [
+                $periodeMulai,
+                $periodeSelesai,
+            ])->where('status_pembayaran', 'expired')->count(),
 
-            'pembayaran_gagal' => Pembayaran::where(
-                'status_pembayaran', 'gagal'
-            )->count(),
-
-            'pembayaran_expired' => Pembayaran::where(
-                'status_pembayaran', 'expired'
-            )->count(),
-
-            // Pendapatan dari pembayaran yang sudah dikonfirmasi
-            'total_pendapatan' => Pembayaran::where(
-                'status_pembayaran', 'dibayar'
-            )->sum('jumlah_bayar'),
-
-            // Pendapatan hari ini
+            // Pendapatan hari ini.
             'pendapatan_hari_ini' => Pembayaran::where(
-                'status_pembayaran', 'dibayar'
+                'status_pembayaran',
+                'dibayar'
             )
                 ->whereDate('tanggal_pembayaran', today())
                 ->sum('jumlah_bayar'),
 
-            // Pendapatan bulan ini
+            // Pendapatan bulan ini.
             'pendapatan_bulan_ini' => Pembayaran::where(
-                'status_pembayaran', 'dibayar'
+                'status_pembayaran',
+                'dibayar'
             )
                 ->whereMonth('tanggal_pembayaran', now()->month)
                 ->whereYear('tanggal_pembayaran', now()->year)
@@ -113,7 +337,7 @@ class DashboardController extends Controller
 
         /*
         |--------------------------------------------------------------------------
-        | 2. Produk Terbaru
+        | 6. Produk Terbaru
         |--------------------------------------------------------------------------
         */
 
@@ -127,7 +351,7 @@ class DashboardController extends Controller
 
         /*
         |--------------------------------------------------------------------------
-        | 3. Produk dengan Stok Menipis
+        | 7. Produk Stok Menipis
         |--------------------------------------------------------------------------
         */
 
@@ -143,7 +367,7 @@ class DashboardController extends Controller
 
         /*
         |--------------------------------------------------------------------------
-        | 4. Pesanan Terbaru
+        | 8. Pesanan Terbaru
         |--------------------------------------------------------------------------
         */
 
@@ -154,7 +378,7 @@ class DashboardController extends Controller
 
         /*
         |--------------------------------------------------------------------------
-        | 5. Pembayaran Terbaru
+        | 9. Pembayaran Terbaru
         |--------------------------------------------------------------------------
         */
 
@@ -167,7 +391,7 @@ class DashboardController extends Controller
 
         /*
         |--------------------------------------------------------------------------
-        | 6. Produk Terlaris
+        | 10. Produk Terlaris
         |--------------------------------------------------------------------------
         */
 
@@ -182,48 +406,137 @@ class DashboardController extends Controller
 
         /*
         |--------------------------------------------------------------------------
-        | 7. Data Grafik Penjualan Harian (Senin - Minggu)
+        | 11. Membuat Dataset Grafik Harian
         |--------------------------------------------------------------------------
         */
 
-        $namaHari = [
-            1 => 'Senin',
-            2 => 'Selasa',
-            3 => 'Rabu',
-            4 => 'Kamis',
-            5 => 'Jumat',
-            6 => 'Sabtu',
-            7 => 'Minggu',
-        ];
+        $awalPeriode = $periodeMulai->copy()->startOfDay();
+        $akhirPeriode = $periodeSelesai->copy()->startOfDay();
 
-        $grafikPenjualan = collect($namaHari)->mapWithKeys(fn ($nama) => [
-            $nama => [
-                'hari' => $nama,
+        $grafikPenjualanHarian = [];
+
+        $cursor = $awalPeriode->copy();
+
+        while ($cursor->lte($akhirPeriode)) {
+            $key = $cursor->format('Y-m-d');
+
+            $grafikPenjualanHarian[$key] = [
+                'label' => $cursor->locale('id')->translatedFormat('d M'),
+                'tanggal' => $key,
+                'hari' => $cursor->dayOfWeekIso,
                 'total' => 0.0,
                 'transaksi' => 0,
-            ],
-        ])->toArray();
+            ];
 
-        $pembayaranSelesai = Pembayaran::where('status_pembayaran', 'dibayar')->get();
+            $cursor->addDay();
+        }
+
+        /*
+        |--------------------------------------------------------------------------
+        | 12. Membuat Dataset Grafik Mingguan
+        |--------------------------------------------------------------------------
+        */
+
+        $jumlahHari = (int) $awalPeriode->diffInDays($akhirPeriode) + 1;
+
+        $jumlahMinggu = (int) ceil($jumlahHari / 7);
+
+        $grafikPenjualanMingguan = [];
+
+        for ($i = 1; $i <= $jumlahMinggu; $i++) {
+            $tanggalMulaiMinggu = $awalPeriode->copy()
+                ->addDays(($i - 1) * 7);
+
+            $tanggalSelesaiMinggu = $tanggalMulaiMinggu->copy()
+                ->addDays(6)
+                ->endOfDay();
+
+            if ($tanggalSelesaiMinggu->greaterThan($periodeSelesai)) {
+                $tanggalSelesaiMinggu = $periodeSelesai->copy();
+            }
+
+            $key = 'week_'.$i;
+
+            $grafikPenjualanMingguan[$key] = [
+                'label' => 'Minggu '.$i,
+                'tanggal_mulai' => $tanggalMulaiMinggu->format('Y-m-d'),
+                'tanggal_selesai' => $tanggalSelesaiMinggu->format('Y-m-d'),
+                'total' => 0.0,
+                'transaksi' => 0,
+            ];
+        }
+
+        /*
+        |--------------------------------------------------------------------------
+        | 13. Mengambil Pembayaran Berhasil pada Periode Terpilih
+        |--------------------------------------------------------------------------
+        */
+
+        $pembayaranSelesai = Pembayaran::where(
+            'status_pembayaran',
+            'dibayar'
+        )
+            ->whereNotNull('tanggal_pembayaran')
+            ->whereBetween('tanggal_pembayaran', [
+                $periodeMulai,
+                $periodeSelesai,
+            ])
+            ->get([
+                'tanggal_pembayaran',
+                'jumlah_bayar',
+            ]);
+
         foreach ($pembayaranSelesai as $bayar) {
-            $tgl = $bayar->tanggal_pembayaran;
-            if ($tgl) {
-                $hariKe = $tgl->dayOfWeekIso;
-                if (isset($namaHari[$hariKe])) {
-                    $label = $namaHari[$hariKe];
-                    $grafikPenjualan[$label]['total'] += (float) $bayar->jumlah_bayar;
-                    $grafikPenjualan[$label]['transaksi'] += 1;
-                }
+            $tanggal = Carbon::parse($bayar->tanggal_pembayaran);
+
+            $jumlahBayar = (float) $bayar->jumlah_bayar;
+
+            // Masukkan ke grafik harian.
+            $tanggalKey = $tanggal->format('Y-m-d');
+
+            if (isset($grafikPenjualanHarian[$tanggalKey])) {
+                $grafikPenjualanHarian[$tanggalKey]['total'] += $jumlahBayar;
+
+                $grafikPenjualanHarian[$tanggalKey]['transaksi']++;
+            }
+
+            // Masukkan ke grafik mingguan.
+            $selisihHari = (int) $awalPeriode->diffInDays(
+                $tanggal->copy()->startOfDay()
+            );
+
+            $nomorMinggu = intdiv($selisihHari, 7) + 1;
+
+            $mingguKey = 'week_'.$nomorMinggu;
+
+            if (isset($grafikPenjualanMingguan[$mingguKey])) {
+                $grafikPenjualanMingguan[$mingguKey]['total'] += $jumlahBayar;
+
+                $grafikPenjualanMingguan[$mingguKey]['transaksi']++;
             }
         }
 
         /*
         |--------------------------------------------------------------------------
-        | 8. Kirim Data ke Dashboard
+        | 14. Dataset Grafik Aktif
         |--------------------------------------------------------------------------
         */
 
-        $viewName = view()->exists('admin.dashboard-admin') ? 'admin.dashboard-admin' : 'admin.dashboard';
+        $grafikPenjualan = $view === 'weekly'
+            ? $grafikPenjualanMingguan
+            : $grafikPenjualanHarian;
+
+        $grafikPenjualanAktif = $grafikPenjualan;
+
+        /*
+        |--------------------------------------------------------------------------
+        | 15. Mengirim Data ke Dashboard
+        |--------------------------------------------------------------------------
+        */
+
+        $viewName = view()->exists('admin.dashboard-admin')
+            ? 'admin.dashboard-admin'
+            : 'admin.dashboard';
 
         return view($viewName, compact(
             'stats',
@@ -232,7 +545,17 @@ class DashboardController extends Controller
             'pesananTerbaru',
             'pembayaranTerbaru',
             'produkTerlaris',
-            'grafikPenjualan'
+            'grafikPenjualan',
+            'grafikPenjualanHarian',
+            'grafikPenjualanMingguan',
+            'grafikPenjualanAktif',
+            'range',
+            'view',
+            'mode',
+            'periodeMulai',
+            'periodeSelesai',
+            'periodeSebelumnyaMulai',
+            'periodeSebelumnyaSelesai'
         ));
     }
 }

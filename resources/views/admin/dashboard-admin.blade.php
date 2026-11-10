@@ -498,6 +498,16 @@
       border-radius: 9999px;
     }
 
+    .stat-badge.negative {
+      color: #dc2626;
+      background: #fee2e2;
+    }
+
+    .stat-badge.neutral {
+      color: #64748b;
+      background: #f1f5f9;
+    }
+
     .stat-label {
       font-size: 13px;
       color: var(--text-muted);
@@ -595,8 +605,9 @@
       color: var(--text-muted);
       text-align: right;
       padding-bottom: 24px;
-      width: 50px;
+      width: 78px;
       flex-shrink: 0;
+      white-space: nowrap;
     }
 
     .chart-bars-wrap {
@@ -604,6 +615,9 @@
       display: flex;
       flex-direction: column;
       position: relative;
+      overflow-x: auto;
+      overflow-y: hidden;
+      min-width: 0;
     }
 
     .chart-grid-lines {
@@ -627,8 +641,10 @@
       display: flex;
       align-items: flex-end;
       justify-content: space-around;
+      gap: 6px;
       padding-bottom: 24px;
       z-index: 1;
+      min-width: 100%;
     }
 
     .bar-col {
@@ -638,7 +654,8 @@
       position: relative;
       height: 100%;
       justify-content: flex-end;
-      width: 44px;
+      flex: 1 0 34px;
+      max-width: 54px;
     }
 
     .bar-rect {
@@ -1112,17 +1129,18 @@
         </div>
 
         <div class="content-actions">
-          <div class="time-dropdown">
-            <select class="time-select" aria-label="Filter waktu">
-              <option value="7">7 terakhir</option>
-              <option value="30">30 hari terakhir</option>
-              <option value="bulan">Bulan ini</option>
-              <option value="tahun">Tahun ini</option>
+          <form method="GET" action="{{ url()->current() }}" class="time-dropdown">
+            <input type="hidden" name="view" value="{{ $view ?? 'daily' }}">
+            <select name="range" class="time-select" aria-label="Filter waktu" onchange="this.form.submit()">
+              <option value="7d" {{ ($range ?? '7d') === '7d' ? 'selected' : '' }}>7 hari terakhir</option>
+              <option value="30d" {{ ($range ?? '7d') === '30d' ? 'selected' : '' }}>30 hari terakhir</option>
+              <option value="month" {{ ($range ?? '7d') === 'month' ? 'selected' : '' }}>Bulan ini</option>
+              <option value="year" {{ ($range ?? '7d') === 'year' ? 'selected' : '' }}>Tahun ini</option>
             </select>
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
               <polyline points="6 9 12 15 18 9"/>
             </svg>
-          </div>
+          </form>
 
           <a href="{{ route('admin.products.create') }}" class="btn-add-product">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
@@ -1148,6 +1166,19 @@
       <!-- =====================================================
            ROW 1: 4 STAT CARDS
            ===================================================== -->
+      @php
+        $badgeClass = function (?float $pct): string {
+            if ($pct === null || $pct == 0.0) {
+                return 'neutral';
+            }
+            return $pct < 0 ? 'negative' : '';
+        };
+        $formatPct = function (float $pct): string {
+            $rounded = round($pct, 1);
+            $prefix = $rounded > 0 ? '+' : '';
+            return $prefix . str_replace('.0', '', (string) $rounded) . '%';
+        };
+      @endphp
       <section class="stats-grid" aria-label="Statistik utama">
         <!-- Card 1: Total Produk -->
         <div class="stat-card">
@@ -1159,12 +1190,17 @@
                 <line x1="12" y1="22.08" x2="12" y2="12"/>
               </svg>
             </div>
-            @if(!empty($stats['persentase_produk']))
-              <span class="stat-badge">{{ $stats['persentase_produk'] }}</span>
+            @if (isset($stats['persentase_produk']))
+              <span class="stat-badge {{ $badgeClass((float) $stats['persentase_produk']) }}">
+                {{ $formatPct((float) $stats['persentase_produk']) }}
+              </span>
             @endif
           </div>
           <div class="stat-label">Total produk</div>
           <div class="stat-value">{{ $stats['total_produk'] ?? 0 }}</div>
+          @if (isset($stats['total_produk_keseluruhan']))
+            <div style="font-size:11.5px;color:#64748b;margin-top:4px;">Keseluruhan: {{ $stats['total_produk_keseluruhan'] }}</div>
+          @endif
         </div>
 
         <!-- Card 2: Total Pesanan -->
@@ -1177,12 +1213,17 @@
                 <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/>
               </svg>
             </div>
-            @if(!empty($stats['persentase_pesanan']))
-              <span class="stat-badge">{{ $stats['persentase_pesanan'] }}</span>
+            @if (isset($stats['persentase_pesanan']))
+              <span class="stat-badge {{ $badgeClass((float) $stats['persentase_pesanan']) }}">
+                {{ $formatPct((float) $stats['persentase_pesanan']) }}
+              </span>
             @endif
           </div>
           <div class="stat-label">Total pesanan</div>
           <div class="stat-value">{{ $stats['total_pesanan'] ?? 0 }}</div>
+          @if (isset($stats['total_pesanan_keseluruhan']))
+            <div style="font-size:11.5px;color:#64748b;margin-top:4px;">Keseluruhan: {{ $stats['total_pesanan_keseluruhan'] }}</div>
+          @endif
         </div>
 
         <!-- Card 3: Total Pelanggan -->
@@ -1196,12 +1237,17 @@
                 <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
               </svg>
             </div>
-            @if(!empty($stats['persentase_pelanggan']))
-              <span class="stat-badge">{{ $stats['persentase_pelanggan'] }}</span>
+            @if (isset($stats['persentase_pelanggan']))
+              <span class="stat-badge {{ $badgeClass((float) $stats['persentase_pelanggan']) }}">
+                {{ $formatPct((float) $stats['persentase_pelanggan']) }}
+              </span>
             @endif
           </div>
           <div class="stat-label">Total pelanggan</div>
           <div class="stat-value">{{ $stats['total_pelanggan'] ?? 0 }}</div>
+          @if (isset($stats['total_pelanggan_keseluruhan']))
+            <div style="font-size:11.5px;color:#64748b;margin-top:4px;">Keseluruhan: {{ $stats['total_pelanggan_keseluruhan'] }}</div>
+          @endif
         </div>
 
         <!-- Card 4: Total Pendapatan -->
@@ -1213,12 +1259,17 @@
                 <line x1="2" y1="10" x2="22" y2="10"/>
               </svg>
             </div>
-            @if(!empty($stats['persentase_pendapatan']))
-              <span class="stat-badge">{{ $stats['persentase_pendapatan'] }}</span>
+            @if (isset($stats['persentase_pendapatan']))
+              <span class="stat-badge {{ $badgeClass((float) $stats['persentase_pendapatan']) }}">
+                {{ $formatPct((float) $stats['persentase_pendapatan']) }}
+              </span>
             @endif
           </div>
           <div class="stat-label">Total pendapatan</div>
           <div class="stat-value">Rp {{ number_format((float) ($stats['total_pendapatan'] ?? 0), 0, ',', '.') }}</div>
+          @if (isset($stats['total_pendapatan_keseluruhan']))
+            <div style="font-size:11.5px;color:#64748b;margin-top:4px;">Keseluruhan: Rp {{ number_format((float) $stats['total_pendapatan_keseluruhan'], 0, ',', '.') }}</div>
+          @endif
         </div>
       </section>
 
@@ -1232,37 +1283,44 @@
           <div class="chart-header">
             <div>
               <h2 class="chart-title">Grafik Penjualan</h2>
-              <p class="chart-sub">Performa pendapatan harian</p>
+              <p class="chart-sub">{{ ($view ?? 'daily') === 'weekly' ? 'Performa pendapatan mingguan' : 'Performa pendapatan harian' }}</p>
             </div>
 
             <div class="chart-toggle">
-              <button type="button" class="chart-toggle-btn active" id="btnHarian">
-                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
-                  <polyline points="20 6 9 17 4 12"/>
-                </svg>
+              <a href="{{ request()->fullUrlWithQuery(['range' => $range ?? '7d', 'view' => 'daily']) }}"
+                 class="chart-toggle-btn {{ ($view ?? 'daily') === 'daily' ? 'active' : '' }}"
+                 id="btnHarian">
+                @if (($view ?? 'daily') === 'daily')
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
+                    <polyline points="20 6 9 17 4 12"/>
+                  </svg>
+                @endif
                 <span>Harian</span>
-              </button>
-              <button type="button" class="chart-toggle-btn" id="btnMingguan">
+              </a>
+              <a href="{{ request()->fullUrlWithQuery(['range' => $range ?? '7d', 'view' => 'weekly']) }}"
+                 class="chart-toggle-btn {{ ($view ?? 'daily') === 'weekly' ? 'active' : '' }}"
+                 id="btnMingguan">
+                @if (($view ?? 'daily') === 'weekly')
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
+                    <polyline points="20 6 9 17 4 12"/>
+                  </svg>
+                @endif
                 <span>Mingguan</span>
-              </button>
+              </a>
             </div>
           </div>
 
           @php
-            // Ambil data grafik dari controller atau buat fallback terstruktur
-            $hariList = ['Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu', 'Minggu'];
             $chartData = $grafikPenjualan ?? [];
-
-            // Cari nilai maksimum agar persentase tinggi bar akurat
             $maxVal = 0;
-            foreach ($hariList as $h) {
-                $val = (float) ($chartData[$h]['total'] ?? 0);
+            foreach ($chartData as $point) {
+                $val = (float) ($point['total'] ?? 0);
                 if ($val > $maxVal) {
                     $maxVal = $val;
                 }
             }
             if ($maxVal <= 0) {
-                $maxVal = 10000000; // baseline 10jt
+                $maxVal = 10000000;
             }
           @endphp
 
@@ -1286,22 +1344,24 @@
                 <div class="grid-line"></div>
               </div>
 
-              <div class="chart-bars">
-                @foreach ($hariList as $hari)
+              <div class="chart-bars" style="min-width: {{ max(100, count($chartData) * 48) }}px;">
+                @forelse ($chartData as $key => $point)
                   @php
-                    $nominal = (float) ($chartData[$hari]['total'] ?? 0);
-                    $trxCount = (int) ($chartData[$hari]['transaksi'] ?? 0);
-                    // Hitung tinggi dalam persentase (min 6% agar bar terlihat cantik)
+                    $label = $point['label'] ?? $point['hari'] ?? (string) $key;
+                    $nominal = (float) ($point['total'] ?? 0);
+                    $trxCount = (int) ($point['transaksi'] ?? 0);
                     $heightPercent = $nominal > 0 ? max(8, round(($nominal / $maxVal) * 100)) : 6;
                   @endphp
                   <div class="bar-col">
                     <div class="bar-tooltip">
-                      {{ $hari }}: Rp {{ number_format($nominal, 0, ',', '.') }} ({{ $trxCount }} transaksi)
+                      {{ $label }}: Rp {{ number_format($nominal, 0, ',', '.') }} ({{ $trxCount }} transaksi)
                     </div>
                     <div class="bar-rect" style="height: {{ $heightPercent }}%;"></div>
-                    <span class="bar-label">{{ $hari }}</span>
+                    <span class="bar-label">{{ $label }}</span>
                   </div>
-                @endforeach
+                @empty
+                  <p style="font-size:13px;color:var(--text-muted);margin:auto;">Belum ada data grafik penjualan.</p>
+                @endforelse
               </div>
             </div>
           </div>
@@ -1426,23 +1486,5 @@
 
     </main>
   </div>
-
-  <script>
-    // Toggle Button Harian / Mingguan
-    const btnHarian = document.getElementById('btnHarian');
-    const btnMingguan = document.getElementById('btnMingguan');
-
-    if (btnHarian && btnMingguan) {
-      btnHarian.addEventListener('click', () => {
-        btnHarian.classList.add('active');
-        btnMingguan.classList.remove('active');
-      });
-
-      btnMingguan.addEventListener('click', () => {
-        btnMingguan.classList.add('active');
-        btnHarian.classList.remove('active');
-      });
-    }
-  </script>
 </body>
 </html>

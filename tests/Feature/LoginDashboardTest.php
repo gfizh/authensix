@@ -184,6 +184,33 @@ class LoginDashboardTest extends TestCase
             'stok' => 15,
             'is_active' => true,
         ]);
+
+        $productId = DB::table('produk')->where('nama_produk', 'Logitech G Pro X Superlight')->value('id_produk');
+
+        $this->actingAs($admin)
+            ->get(route('admin.products.edit', $productId))
+            ->assertOk()
+            ->assertSee('Edit Produk')
+            ->assertSee('Logitech G Pro X Superlight');
+
+        $this->actingAs($admin)
+            ->put(route('admin.products.update', $productId), [
+                'nama_produk' => 'Logitech G Pro X Superlight 2',
+                'id_kategori' => $categoryId,
+                'id_merek' => $brandId,
+                'deskripsi' => 'Mouse gaming wireless generasi terbaru.',
+                'harga' => 2100000,
+                'harga_diskon' => 1990000,
+                'stok' => 10,
+                'berat_gram' => 60,
+            ])
+            ->assertRedirect(route('admin.manajemen_produk', ['tab' => 'produk']));
+
+        $this->actingAs($admin)
+            ->get(route('admin.dashboard-admin', ['range' => '30d', 'view' => 'weekly']))
+            ->assertOk()
+            ->assertSee('Performa pendapatan mingguan')
+            ->assertSee('Minggu 1');
     }
 
     public function test_admin_visiting_customer_dashboard_is_redirected_to_admin_dashboard(): void

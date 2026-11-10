@@ -1047,7 +1047,7 @@
                     min="0"
                     step="1"
                     placeholder=""
-                    value="{{ old('harga_diskon') }}"
+                    value="{{ old('harga_diskon', isset($product) && $product->harga_diskon !== null ? (int) $product->harga_diskon : '') }}"
                   >
                 </div>
 
@@ -1070,13 +1070,13 @@
                   <label class="form-label" for="inputBerat">Berat (gram)</label>
                   <input
                     type="number"
-                    name="berat"
+                    name="berat_gram"
                     id="inputBerat"
                     class="form-input"
                     min="0"
                     step="1"
                     placeholder=""
-                    value="{{ old('berat') }}"
+                    value="{{ old('berat_gram', old('berat', $product->berat_gram ?? '')) }}"
                   >
                 </div>
               </div>
@@ -1203,12 +1203,6 @@
       // Nama
       const nameVal = inputNama.value.trim();
       sumName.textContent = nameVal || '-';
-
-      // Auto-generate SKU
-      if (nameVal && !skuField.value) {
-        const clean = nameVal.toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 6) || 'PRD';
-        skuField.value = 'SKU-' + clean + '-' + Math.floor(100 + Math.random() * 900);
-      }
 
       // Kategori
       const selectedOption = selectKategori.options[selectKategori.selectedIndex];
