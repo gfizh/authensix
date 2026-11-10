@@ -17,7 +17,9 @@ class Produk extends Model
         'nama_produk',
         'tipe_produk',
         'harga',
+        'harga_diskon',
         'stok',
+        'berat_gram',
         'jumlah_terjual',
         'kondisi',
         'masa_garansi_bulan',
@@ -34,7 +36,9 @@ class Produk extends Model
     {
         return [
             'harga' => 'decimal:2',
+            'harga_diskon' => 'decimal:2',
             'stok' => 'integer',
+            'berat_gram' => 'integer',
             'jumlah_terjual' => 'integer',
             'masa_garansi_bulan' => 'integer',
             'rating_rata_rata' => 'decimal:2',

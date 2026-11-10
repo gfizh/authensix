@@ -61,11 +61,18 @@ class ProductController extends Controller
      */
     public function create(): View
     {
-        $viewName = view()->exists('admin.tambah_produk') ? 'admin.tambah_produk' : 'admin.products.create';
+        $viewName = view()->exists('admin.tambah_produk')
+            ? 'admin.tambah_produk'
+            : 'admin.products.create';
 
         return view($viewName, [
-            'categories' => Kategori::query()->orderBy('nama_kategori')->get(),
-            'brands' => Merek::query()->orderBy('nama_merek')->get(),
+            'categories' => Kategori::query()
+                ->orderBy('nama_kategori')
+                ->get(),
+
+            'brands' => Merek::query()
+                ->orderBy('nama_merek')
+                ->get(),
         ]);
     }
 
@@ -74,27 +81,76 @@ class ProductController extends Controller
      */
     public function store(Request $request): RedirectResponse
     {
-        // Lengkapi default field skema yang tidak terdapat di form UI
-        if (! $request->filled('sku') && $request->filled('nama_produk')) {
-            $cleanName = strtoupper(preg_replace('/[^A-Za-z0-9]/', '', substr($request->nama_produk, 0, 8)));
-            $cleanName = $cleanName ?: 'PRD';
-            $sku = 'PRD-'.$cleanName.'-'.rand(100, 999);
-            while (Produk::where('sku', $sku)->exists()) {
-                $sku = 'PRD-'.$cleanName.'-'.rand(100, 999);
+        /*
+        |--------------------------------------------------------------------------
+        | 1. Default Field
+        |--------------------------------------------------------------------------
+        */
+
+        $defaults = [
+            'tipe_produk' => 'regular',
+            'kondisi' => 'baru',
+            'masa_garansi_bulan' => 12,
+        ];
+
+        foreach ($defaults as $field => $value) {
+            if (! $request->filled($field)) {
+                $request->merge([
+                    $field => $value,
+                ]);
             }
-            $request->merge(['sku' => $sku]);
-        }
-        if (! $request->filled('tipe_produk')) {
-            $request->merge(['tipe_produk' => 'regular']);
-        }
-        if (! $request->filled('kondisi')) {
-            $request->merge(['kondisi' => 'baru']);
-        }
-        if (! $request->filled('masa_garansi_bulan')) {
-            $request->merge(['masa_garansi_bulan' => 12]);
         }
 
+        /*
+        |--------------------------------------------------------------------------
+        | 2. Kompatibilitas Input Berat
+        |--------------------------------------------------------------------------
+        |
+        | Frontend saat ini menggunakan name="berat".
+        | Database menggunakan kolom berat_gram.
+        |
+        */
+
+        if (! $request->has('berat_gram') && $request->has('berat')) {
+            $request->merge([
+                'berat_gram' => $request->input('berat'),
+            ]);
+        }
+
+        /*
+        |--------------------------------------------------------------------------
+        | 3. Validasi
+        |--------------------------------------------------------------------------
+        */
+
         $data = $request->validate($this->rules());
+
+        /*
+        |--------------------------------------------------------------------------
+        | 4. Generate SKU Otomatis
+        |--------------------------------------------------------------------------
+        */
+
+        if (blank($data['sku'] ?? null)) {
+            $data['sku'] = $this->generateSku(
+                $data['nama_produk']
+            );
+        }
+
+        /*
+        |--------------------------------------------------------------------------
+        | 5. Default Harga Diskon dan Berat
+        |--------------------------------------------------------------------------
+        */
+
+        $data['harga_diskon'] = $data['harga_diskon'] ?? null;
+        $data['berat_gram'] = $data['berat_gram'] ?? 0;
+
+        /*
+        |--------------------------------------------------------------------------
+        | 6. Upload Gambar
+        |--------------------------------------------------------------------------
+        */
 
         if ($request->hasFile('gambar')) {
             $data['gambar_path'] = $request->file('gambar')
@@ -102,13 +158,22 @@ class ProductController extends Controller
         }
 
         unset($data['gambar']);
-        unset($data['harga_diskon']);
-        unset($data['berat']);
 
-        // Nilai awal dikelola oleh sistem.
+        /*
+        |--------------------------------------------------------------------------
+        | 7. Nilai Awal Sistem
+        |--------------------------------------------------------------------------
+        */
+
         $data['jumlah_terjual'] = 0;
         $data['rating_rata_rata'] = 0;
         $data['is_active'] = true;
+
+        /*
+        |--------------------------------------------------------------------------
+        | 8. Simpan Produk
+        |--------------------------------------------------------------------------
+        */
 
         Produk::create($data);
 
@@ -124,7 +189,9 @@ class ProductController extends Controller
     {
         return view('admin.products.edit', [
             'product' => $produk,
+
             'categories' => Kategori::query()->get(),
+
             'brands' => Merek::query()->get(),
         ]);
     }
@@ -136,7 +203,31 @@ class ProductController extends Controller
         Request $request,
         Produk $produk
     ): RedirectResponse {
+        /*
+        |--------------------------------------------------------------------------
+        | 1. Kompatibilitas Input Berat
+        |--------------------------------------------------------------------------
+        */
+
+        if (! $request->has('berat_gram') && $request->has('berat')) {
+            $request->merge([
+                'berat_gram' => $request->input('berat'),
+            ]);
+        }
+
+        /*
+        |--------------------------------------------------------------------------
+        | 2. Validasi
+        |--------------------------------------------------------------------------
+        */
+
         $data = $request->validate($this->rules($produk));
+
+        /*
+        |--------------------------------------------------------------------------
+        | 3. Upload Gambar Baru
+        |--------------------------------------------------------------------------
+        */
 
         unset($data['gambar']);
 
@@ -150,9 +241,20 @@ class ProductController extends Controller
             $data['gambar_path'] = $newImagePath;
         }
 
+        /*
+        |--------------------------------------------------------------------------
+        | 4. Update Produk
+        |--------------------------------------------------------------------------
+        */
+
         $produk->update($data);
 
-        // Hapus foto lama setelah data berhasil diperbarui.
+        /*
+        |--------------------------------------------------------------------------
+        | 5. Hapus Gambar Lama
+        |--------------------------------------------------------------------------
+        */
+
         if ($newImagePath && $oldImagePath) {
             Storage::disk('public')->delete($oldImagePath);
         }
@@ -182,6 +284,28 @@ class ProductController extends Controller
     }
 
     /**
+     * Membuat SKU otomatis.
+     *
+     * Format: PRD-NAMAPRODUK-XXX
+     */
+    private function generateSku(string $namaProduk): string
+    {
+        $cleanName = preg_replace(
+            '/[^A-Za-z0-9]/',
+            '',
+            substr($namaProduk, 0, 8)
+        );
+
+        $cleanName = strtoupper($cleanName ?: 'PRD');
+
+        do {
+            $sku = 'PRD-'.$cleanName.'-'.random_int(100, 999);
+        } while (Produk::where('sku', $sku)->exists());
+
+        return $sku;
+    }
+
+    /**
      * Aturan validasi produk.
      */
     private function rules(?Produk $produk = null): array
@@ -189,7 +313,10 @@ class ProductController extends Controller
         $skuRule = Rule::unique('produk', 'sku');
 
         if ($produk) {
-            $skuRule->ignore($produk->id_produk, 'id_produk');
+            $skuRule->ignore(
+                $produk->id_produk,
+                'id_produk'
+            );
         }
 
         return [
@@ -205,12 +332,19 @@ class ProductController extends Controller
                 'exists:merek,id_merek',
             ],
 
-            'sku' => [
-                'required',
-                'string',
-                'max:255',
-                $skuRule,
-            ],
+            'sku' => $produk
+                ? [
+                    'required',
+                    'string',
+                    'max:255',
+                    $skuRule,
+                ]
+                : [
+                    'nullable',
+                    'string',
+                    'max:255',
+                    $skuRule,
+                ],
 
             'nama_produk' => [
                 'required',
@@ -229,8 +363,21 @@ class ProductController extends Controller
                 'min:0',
             ],
 
+            'harga_diskon' => [
+                'nullable',
+                'numeric',
+                'min:0',
+                'lt:harga',
+            ],
+
             'stok' => [
                 'required',
+                'integer',
+                'min:0',
+            ],
+
+            'berat_gram' => [
+                'nullable',
                 'integer',
                 'min:0',
             ],
