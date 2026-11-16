@@ -226,7 +226,7 @@ Route::middleware(['auth', 'admin'])
             ->name('tambah_produk');
 
         Route::resource('products', AdminProductController::class)
-            ->except(['show', 'destroy'])
+            ->except(['show'])
             ->parameters(['products' => 'produk']);
 
         Route::patch('/products/{produk}/status', [
