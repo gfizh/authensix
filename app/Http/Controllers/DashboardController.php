@@ -29,7 +29,10 @@ class DashboardController extends Controller
                     $search = '%'.$filters['search'].'%';
 
                     $query->where('nama_produk', 'like', $search)
-                        ->orWhere('sku', 'like', $search);
+                        ->orWhere('sku', 'like', $search)
+                        ->orWhereHas('kategori', function ($catQuery) use ($search) {
+                            $catQuery->where('nama_kategori', 'like', $search);
+                        });
                 })
             )
             ->when(

@@ -775,82 +775,269 @@
         margin-left: 0;
       }
     }
+
+    /* Pop Out Card Modal */
+    .modal-backdrop {
+      position: fixed;
+      inset: 0;
+      background: rgba(15, 23, 42, 0.55);
+      backdrop-filter: blur(4px);
+      z-index: 9999;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 16px;
+      animation: modalFadeIn 0.18s ease;
+    }
+
+    .modal-card {
+      background: #ffffff;
+      border-radius: 16px;
+      width: 100%;
+      max-width: 440px;
+      padding: 24px;
+      box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.12), 0 8px 10px -6px rgba(0, 0, 0, 0.08);
+      border: 1px solid #e2e8f0;
+      text-align: center;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      animation: modalScaleUp 0.18s ease;
+    }
+
+    @keyframes modalFadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+
+    @keyframes modalScaleUp {
+      from { opacity: 0; transform: scale(0.95); }
+      to { opacity: 1; transform: scale(1); }
+    }
+
+    .modal-icon {
+      width: 52px;
+      height: 52px;
+      border-radius: 50%;
+      display: grid;
+      place-items: center;
+      margin-bottom: 16px;
+    }
+
+    .modal-icon svg {
+      width: 24px;
+      height: 24px;
+    }
+
+    .modal-icon-primary {
+      background: #eff6ff;
+      color: #1673e6;
+    }
+
+    .modal-title {
+      font-size: 18px;
+      font-weight: 700;
+      color: #0f172a;
+      margin-bottom: 8px;
+    }
+
+    .modal-desc {
+      font-size: 13.5px;
+      color: #64748b;
+      line-height: 1.5;
+      margin-bottom: 24px;
+    }
+
+    .modal-actions {
+      display: flex;
+      gap: 10px;
+      width: 100%;
+      justify-content: flex-end;
+    }
+
+    .btn-modal-cancel {
+      flex: 1;
+      background: #f1f5f9;
+      color: #475569;
+      padding: 10px 16px;
+      border-radius: 10px;
+      font-size: 13px;
+      font-weight: 600;
+      transition: background 0.15s ease;
+      border: 0;
+      cursor: pointer;
+    }
+
+    .btn-modal-cancel:hover {
+      background: #e2e8f0;
+      color: #1e293b;
+    }
+
+    .btn-modal-primary {
+      flex: 1.2;
+      background: #1673e6;
+      color: #ffffff;
+      padding: 10px 16px;
+      border-radius: 10px;
+      font-size: 13px;
+      font-weight: 600;
+      transition: background 0.15s ease;
+      border: 0;
+      cursor: pointer;
+    }
+
+    .btn-modal-primary:hover {
+      background: #1361c4;
+    }
+
+    /* Alert Warning (No Changes Detected) */
+    .alert-warning {
+      background: #fffbeb;
+      border: 1px solid #fde68a;
+      border-radius: 10px;
+      padding: 14px 18px;
+      margin-bottom: 24px;
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+      color: #92400e;
+      animation: alertSlideDown 0.2s ease;
+    }
+
+    .alert-warning-icon {
+      width: 20px;
+      height: 20px;
+      flex-shrink: 0;
+      margin-top: 1px;
+    }
+
+    .alert-warning-content strong {
+      display: block;
+      font-size: 13.5px;
+      font-weight: 700;
+      color: #78350f;
+      margin-bottom: 2px;
+    }
+
+    .alert-warning-content p {
+      font-size: 13px;
+      color: #92400e;
+      line-height: 1.4;
+      margin: 0;
+    }
+
+    .summary-no-changes-notice {
+      background: #fef3c7;
+      border: 1px solid #fde68a;
+      color: #92400e;
+      font-size: 12px;
+      font-weight: 600;
+      padding: 8px 12px;
+      border-radius: 8px;
+      margin-bottom: 10px;
+      text-align: center;
+      animation: alertSlideDown 0.15s ease;
+    }
+
+    @keyframes alertSlideDown {
+      from { opacity: 0; transform: translateY(-6px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* Modal Changes Box */
+    .modal-changes-box {
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
+      border-radius: 10px;
+      padding: 12px 14px;
+      margin-bottom: 20px;
+      text-align: left;
+      max-height: 180px;
+      overflow-y: auto;
+      width: 100%;
+    }
+
+    .modal-changes-title {
+      font-size: 11.5px;
+      font-weight: 700;
+      color: #475569;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-bottom: 8px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .modal-changes-title svg {
+      color: #16a34a;
+    }
+
+    .modal-changes-list {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      margin: 0;
+      padding: 0;
+    }
+
+    .modal-change-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 12px;
+      padding: 4px 0;
+      border-bottom: 1px dashed #e2e8f0;
+      gap: 8px;
+    }
+
+    .modal-change-item:last-child {
+      border-bottom: none;
+    }
+
+    .modal-change-label {
+      font-weight: 600;
+      color: #334155;
+      white-space: nowrap;
+    }
+
+    .modal-change-diff {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      font-size: 11.5px;
+      min-width: 0;
+      justify-content: flex-end;
+    }
+
+    .modal-change-old {
+      color: #94a3b8;
+      text-decoration: line-through;
+      max-width: 90px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .modal-change-arrow {
+      color: #64748b;
+      font-weight: bold;
+    }
+
+    .modal-change-new {
+      color: #0284c7;
+      font-weight: 600;
+      max-width: 120px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
   </style>
 </head>
 <body>
 
-  <!-- =====================================================
-       LEFT SIDEBAR
-       ===================================================== -->
-  <aside class="sidebar" aria-label="Menu Admin">
-    <div class="sidebar-brand">
-      <a href="{{ route('admin.dashboard-admin') }}" class="brand-link" aria-label="AuthenSIX Computer">
-        <div class="brand-text">Authen<b>SIX</b></div>
-        <small class="brand-sub">COMPUTER</small>
-      </a>
-    </div>
-
-    <nav class="sidebar-nav">
-      <a href="{{ route('admin.dashboard-admin') }}" class="nav-item">
-        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-          <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
-          <polyline points="9 22 9 12 15 12 15 22"/>
-        </svg>
-        <span>Dashboard</span>
-      </a>
-
-      <a href="{{ route('admin.manajemen_produk', ['tab' => 'pesanan']) }}" class="nav-item">
-        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-          <path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2"/>
-          <rect x="9" y="3" width="6" height="4" rx="1"/>
-          <path d="M9 12h6"/>
-          <path d="M9 16h6"/>
-        </svg>
-        <span>Manajemen Pesanan</span>
-      </a>
-
-      <a href="{{ route('admin.manajemen_produk', ['tab' => 'produk']) }}" class="nav-item">
-        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-          <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/>
-          <polyline points="3.27 6.96 12 12.01 20.73 6.96"/>
-          <line x1="12" y1="22.08" x2="12" y2="12"/>
-        </svg>
-        <span>Product</span>
-      </a>
-
-      <a href="{{ route('admin.tambah_produk') }}" class="nav-item active" aria-current="page">
-        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-          <circle cx="12" cy="12" r="9"/>
-          <line x1="12" y1="8" x2="12" y2="16"/>
-          <line x1="8" y1="12" x2="16" y2="12"/>
-        </svg>
-        <span>Tambah Produk</span>
-      </a>
-    </nav>
-
-    <!-- Sidebar Bottom User Profile Card -->
-    <div class="sidebar-footer">
-      <div class="user-card">
-        <div class="user-avatar" title="{{ auth()->user()->nama_lengkap ?? 'Admin' }}">
-          {{ strtoupper(substr(auth()->user()->nama_lengkap ?? auth()->user()->username ?? 'A', 0, 2)) }}
-        </div>
-        <div class="user-meta">
-          <div class="user-name">{{ auth()->user()->nama_lengkap ?? auth()->user()->username ?? 'Admin' }}</div>
-          <div class="user-role">{{ auth()->user()->isAdmin() ? 'administrator' : (auth()->user()->role ?? 'administrator') }}</div>
-        </div>
-        <form method="POST" action="{{ route('logout') }}" class="logout-form">
-          @csrf
-          <button type="submit" class="logout-btn" title="Keluar dari akun">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
-              <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
-              <polyline points="16 17 21 12 16 7"/>
-              <line x1="21" y1="12" x2="9" y2="12"/>
-            </svg>
-          </button>
-        </form>
-      </div>
-    </div>
-  </aside>
+  @include('admin.partials.sidebar')
 
   <!-- =====================================================
        MAIN LAYOUT
@@ -936,8 +1123,24 @@
         </div>
       @endif
 
+      @if ($isEdit)
+        <!-- Alert Ketika Tidak Ada Perubahan yang Dilakukan -->
+        <div id="noChangesAlert" class="alert-warning" role="alert" style="display: none;">
+          <svg class="alert-warning-icon" viewBox="0 0 20 20" fill="currentColor">
+            <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd" />
+          </svg>
+          <div class="alert-warning-content">
+            <strong>Belum ada perubahan data!</strong>
+            <p>Anda belum mengubah informasi produk apapun. Harap lakukan perubahan pada minimal satu data produk terlebih dahulu sebelum menyimpan atau mengonfirmasi perubahan.</p>
+          </div>
+        </div>
+      @endif
+
       <!-- Add / Edit Product Form -->
-      <form action="{{ $isEdit ? route('admin.products.update', $product->id_produk) : route('admin.products.store') }}" method="POST" enctype="multipart/form-data" id="formTambahProduk">
+      <form action="{{ $isEdit ? route('admin.products.update', $product->id_produk) : route('admin.products.store') }}"
+            method="POST"
+            enctype="multipart/form-data"
+            id="formTambahProduk">
         @csrf
         @if ($isEdit)
           @method('PUT')
@@ -1160,7 +1363,14 @@
               </div>
 
               <div class="summary-actions">
-                <button type="submit" class="btn-save-product">Simpan Produk</button>
+                @if ($isEdit)
+                  <div id="summaryNoChangesNotice" class="summary-no-changes-notice" style="display: none;">
+                    ⚠️ Tidak ada perubahan yang diedit
+                  </div>
+                  <button type="button" class="btn-save-product" id="btnSaveProduct" onclick="openEditConfirmModal()">Simpan Perubahan</button>
+                @else
+                  <button type="submit" class="btn-save-product">Simpan Produk</button>
+                @endif
                 <a href="{{ route('admin.dashboard-admin') }}" class="btn-cancel">Batal</a>
               </div>
             </div>
@@ -1169,6 +1379,45 @@
 
         </div>
       </form>
+
+      @if ($isEdit)
+      <!-- =====================================================
+           POP OUT CARD MODAL: KONFIRMASI PERUBAHAN PRODUK
+           ===================================================== -->
+      <div id="editConfirmModal" class="modal-backdrop" aria-hidden="true" style="display:none;">
+        <div class="modal-card" role="dialog" aria-modal="true" aria-labelledby="modalEditTitle">
+          <div class="modal-icon modal-icon-primary">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+              <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+            </svg>
+          </div>
+          <div class="modal-content" style="width: 100%;">
+            <h3 id="modalEditTitle" class="modal-title">Konfirmasi Perubahan Produk</h3>
+            <p class="modal-desc" style="margin-bottom: 14px;">
+              Apakah Anda yakin ingin menyimpan perubahan data untuk produk <strong style="color:var(--text-main);">"{{ $product->nama_produk ?? 'ini' }}"</strong>?
+            </p>
+
+            <!-- Container Ringkasan Perubahan yang Terdeteksi -->
+            <div id="modalChangesContainer" class="modal-changes-box">
+              <div class="modal-changes-title">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                  <polyline points="20 6 9 17 4 12"/>
+                </svg>
+                Perubahan yang akan disimpan:
+              </div>
+              <ul id="modalChangesList" class="modal-changes-list">
+                <!-- Diisi via JavaScript -->
+              </ul>
+            </div>
+          </div>
+          <div class="modal-actions">
+            <button type="button" class="btn-modal-cancel" onclick="closeEditConfirmModal()">Periksa Lagi</button>
+            <button type="button" class="btn-modal-primary" id="btnExecuteSaveEdit" onclick="submitEditForm()">Ya, Simpan Perubahan</button>
+          </div>
+        </div>
+      </div>
+      @endif
 
     </main>
   </div>
@@ -1255,6 +1504,217 @@
         };
         reader.readAsDataURL(file);
       }
+    });
+
+    @if ($isEdit)
+    // Snapshot nilai awal saat halaman dimuat untuk dirty checking
+    const initialFormState = {
+      nama_produk: (document.getElementById('inputNama')?.value || '').trim(),
+      id_merek: (document.getElementById('selectBrand')?.value || '').trim(),
+      brand_text: (function() {
+        const s = document.getElementById('selectBrand');
+        return (s && s.selectedIndex >= 0 && s.options[s.selectedIndex].value) ? s.options[s.selectedIndex].text.trim() : '';
+      })(),
+      id_kategori: (document.getElementById('selectKategori')?.value || '').trim(),
+      kategori_text: (function() {
+        const s = document.getElementById('selectKategori');
+        return (s && s.selectedIndex >= 0 && s.options[s.selectedIndex].value) ? s.options[s.selectedIndex].text.trim() : '';
+      })(),
+      deskripsi: (document.getElementById('inputDeskripsi')?.value || '').trim(),
+      harga: (document.getElementById('inputHarga')?.value || '').trim(),
+      harga_diskon: (document.getElementById('inputDiskon')?.value || '').trim(),
+      stok: (document.getElementById('inputStok')?.value || '').trim(),
+      berat_gram: (document.getElementById('inputBerat')?.value || '').trim(),
+    };
+
+    function escapeHtml(str) {
+      if (!str) return '';
+      return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
+    }
+
+    function getFormChanges() {
+      const changes = [];
+
+      const curNama = (document.getElementById('inputNama')?.value || '').trim();
+      if (curNama !== initialFormState.nama_produk) {
+        changes.push({
+          label: 'Nama Produk',
+          oldVal: initialFormState.nama_produk || '(Kosong)',
+          newVal: curNama || '(Kosong)'
+        });
+      }
+
+      const selectBrand = document.getElementById('selectBrand');
+      const curBrandVal = (selectBrand?.value || '').trim();
+      if (curBrandVal !== initialFormState.id_merek) {
+        const curBrandText = (selectBrand && selectBrand.selectedIndex >= 0 && selectBrand.options[selectBrand.selectedIndex].value)
+          ? selectBrand.options[selectBrand.selectedIndex].text.trim()
+          : '';
+        changes.push({
+          label: 'Brand',
+          oldVal: initialFormState.brand_text || '(Belum dipilih)',
+          newVal: curBrandText || '(Belum dipilih)'
+        });
+      }
+
+      const selectKategori = document.getElementById('selectKategori');
+      const curCatVal = (selectKategori?.value || '').trim();
+      if (curCatVal !== initialFormState.id_kategori) {
+        const curCatText = (selectKategori && selectKategori.selectedIndex >= 0 && selectKategori.options[selectKategori.selectedIndex].value)
+          ? selectKategori.options[selectKategori.selectedIndex].text.trim()
+          : '';
+        changes.push({
+          label: 'Kategori',
+          oldVal: initialFormState.kategori_text || '(Belum dipilih)',
+          newVal: curCatText || '(Belum dipilih)'
+        });
+      }
+
+      const curDeskripsi = (document.getElementById('inputDeskripsi')?.value || '').trim();
+      if (curDeskripsi !== initialFormState.deskripsi) {
+        changes.push({
+          label: 'Deskripsi',
+          oldVal: initialFormState.deskripsi.substring(0, 24) + (initialFormState.deskripsi.length > 24 ? '...' : ''),
+          newVal: curDeskripsi.substring(0, 24) + (curDeskripsi.length > 24 ? '...' : '')
+        });
+      }
+
+      const curHarga = (document.getElementById('inputHarga')?.value || '').trim();
+      if (curHarga !== initialFormState.harga) {
+        changes.push({
+          label: 'Harga Jual',
+          oldVal: initialFormState.harga ? formatRupiah(parseFloat(initialFormState.harga)) : '(Kosong)',
+          newVal: curHarga ? formatRupiah(parseFloat(curHarga)) : '(Kosong)'
+        });
+      }
+
+      const curDiskon = (document.getElementById('inputDiskon')?.value || '').trim();
+      if (curDiskon !== initialFormState.harga_diskon) {
+        changes.push({
+          label: 'Harga Diskon',
+          oldVal: initialFormState.harga_diskon ? formatRupiah(parseFloat(initialFormState.harga_diskon)) : '(Tanpa Diskon)',
+          newVal: curDiskon ? formatRupiah(parseFloat(curDiskon)) : '(Tanpa Diskon)'
+        });
+      }
+
+      const curStok = (document.getElementById('inputStok')?.value || '').trim();
+      if (curStok !== initialFormState.stok) {
+        changes.push({
+          label: 'Stok',
+          oldVal: initialFormState.stok || '0',
+          newVal: curStok || '0'
+        });
+      }
+
+      const curBerat = (document.getElementById('inputBerat')?.value || '').trim();
+      if (curBerat !== initialFormState.berat_gram) {
+        changes.push({
+          label: 'Berat',
+          oldVal: initialFormState.berat_gram ? (initialFormState.berat_gram + ' gr') : '(Kosong)',
+          newVal: curBerat ? (curBerat + ' gr') : '(Kosong)'
+        });
+      }
+
+      if (fileInput && fileInput.files && fileInput.files.length > 0) {
+        changes.push({
+          label: 'Gambar Produk',
+          oldVal: 'Foto lama',
+          newVal: fileInput.files[0].name
+        });
+      }
+
+      return changes;
+    }
+
+    function clearNoChangesNotice() {
+      const alert = document.getElementById('noChangesAlert');
+      const notice = document.getElementById('summaryNoChangesNotice');
+      if (alert) alert.style.display = 'none';
+      if (notice) notice.style.display = 'none';
+    }
+
+    ['inputNama', 'selectBrand', 'selectKategori', 'inputDeskripsi', 'inputHarga', 'inputDiskon', 'inputStok', 'inputBerat'].forEach(id => {
+      const el = document.getElementById(id);
+      if (el) {
+        el.addEventListener('input', clearNoChangesNotice);
+        el.addEventListener('change', clearNoChangesNotice);
+      }
+    });
+    if (fileInput) {
+      fileInput.addEventListener('change', clearNoChangesNotice);
+    }
+
+    function openEditConfirmModal() {
+      const form = document.getElementById('formTambahProduk');
+      // 1. Validasi form HTML5 (required fields seperti nama, kategori, brand, harga, stok, deskripsi)
+      if (form && !form.checkValidity()) {
+        form.reportValidity();
+        return;
+      }
+
+      // 2. Dirty checking: pastikan admin telah melakukan perubahan data
+      const changes = getFormChanges();
+      if (changes.length === 0) {
+        const alert = document.getElementById('noChangesAlert');
+        const notice = document.getElementById('summaryNoChangesNotice');
+        if (alert) {
+          alert.style.display = 'flex';
+          alert.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+        if (notice) {
+          notice.style.display = 'block';
+        }
+        return; // Jangan buka modal jika tidak ada data yang diubah
+      }
+
+      // 3. Render ringkasan perubahan pada modal
+      const changesList = document.getElementById('modalChangesList');
+      if (changesList) {
+        changesList.innerHTML = changes.map(c => `
+          <li class="modal-change-item">
+            <span class="modal-change-label">${escapeHtml(c.label)}</span>
+            <div class="modal-change-diff">
+              <span class="modal-change-old" title="${escapeHtml(c.oldVal)}">${escapeHtml(c.oldVal)}</span>
+              <span class="modal-change-arrow">&rarr;</span>
+              <span class="modal-change-new" title="${escapeHtml(c.newVal)}">${escapeHtml(c.newVal)}</span>
+            </div>
+          </li>
+        `).join('');
+      }
+
+      // 4. Buka pop out card modal
+      const modal = document.getElementById('editConfirmModal');
+      if (modal) {
+        modal.style.display = 'flex';
+        document.body.style.overflow = 'hidden';
+      }
+    }
+    @endif
+
+    function closeEditConfirmModal() {
+      const modal = document.getElementById('editConfirmModal');
+      if (modal) {
+        modal.style.display = 'none';
+        document.body.style.overflow = '';
+      }
+    }
+
+    function submitEditForm() {
+      const form = document.getElementById('formTambahProduk');
+      if (form) form.submit();
+    }
+
+    document.getElementById('editConfirmModal')?.addEventListener('click', function(e) {
+      if (e.target === this) closeEditConfirmModal();
+    });
+
+    document.addEventListener('keydown', function(e) {
+      if (e.key === 'Escape') closeEditConfirmModal();
     });
   </script>
 </body>

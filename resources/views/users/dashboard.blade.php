@@ -6,11 +6,11 @@
 <title>AuthenSIX Computer</title>
 <style>
   :root {
-    --bg: #ffffff;
+    --bg: #f8fafc;
     --text: #0f172a;
     --muted: #64748b;
     --line: #e2e8f0;
-    --placeholder: #f8fafc;
+    --placeholder: #ffffff;
     --accent: #1673e6;
   }
   * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -92,58 +92,74 @@
 
   /* ---------- Kategori tab ---------- */
   .tabs {
-    display: flex; gap: 20px; align-items: center;
-    padding: 18px 4px 14px;
+    display: flex; gap: 10px; align-items: center;
+    padding: 18px 2px 14px;
     overflow-x: auto;
     scrollbar-width: none;
   }
   .tabs::-webkit-scrollbar { display: none; }
   .tab {
+    background: #ffffff;
     color: var(--muted);
-    font-size: 14.5px;
+    font-size: 13.5px;
     font-weight: 500;
     white-space: nowrap;
-    padding: 4px 2px 8px;
-    border-bottom: 2.5px solid transparent;
-    transition: color 0.15s ease, border-color 0.15s ease;
+    padding: 8px 16px;
+    border-radius: 10px;
+    border: 1px solid var(--line);
+    box-shadow: 0 1px 2px rgba(15, 23, 42, 0.02);
+    transition: all 0.15s ease;
   }
   .tab:hover {
-    color: var(--accent);
+    background: #f1f5f9;
+    color: var(--text);
     border-color: #cbd5e1;
   }
   .tab.active {
-    color: var(--accent);
-    font-weight: 650;
+    background: var(--accent);
+    color: #ffffff;
+    font-weight: 600;
     border-color: var(--accent);
+    box-shadow: 0 2px 6px rgba(22, 115, 230, 0.25);
   }
 
   /* ---------- Search Title ---------- */
   .search-title {
-    font-size: 18px;
-    font-weight: 650;
-    color: #1e293b;
-    margin: 8px 0 16px;
+    font-size: 15px;
+    font-weight: 600;
+    color: #334155;
+    margin: 4px 0 16px;
+    padding: 8px 14px;
+    background: #ffffff;
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    display: inline-block;
+  }
+  .search-title span {
+    color: var(--accent);
+    font-weight: 700;
   }
 
   /* ---------- Produk ---------- */
   .products {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+    grid-template-columns: repeat(auto-fill, minmax(170px, 1fr));
     gap: 16px;
   }
   .card {
     display: flex;
     flex-direction: column;
-    padding: 10px;
-    border-radius: 12px;
-    border: 1px solid #f1f5f9;
+    padding: 12px;
+    border-radius: 14px;
+    border: 1px solid var(--line);
     background: #ffffff;
-    transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+    box-shadow: 0 1px 3px rgba(15, 23, 42, 0.03);
+    transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.2s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.2s ease;
   }
   .card:hover {
     border-color: #cbd5e1;
-    box-shadow: 0 8px 24px -4px rgba(0, 0, 0, 0.07);
-    transform: translateY(-2px);
+    box-shadow: 0 10px 25px -4px rgba(15, 23, 42, 0.08);
+    transform: translateY(-3px);
   }
   .card[hidden] { display: none; }
   .thumb {

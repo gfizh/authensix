@@ -160,6 +160,137 @@ class OrderFlowTest extends TestCase
             ->assertForbidden();
     }
 
+    public function test_admin_can_delete_product_from_product_management(): void
+    {
+        $admin = $this->createAdmin();
+        $category = Kategori::create(['nama_kategori' => 'Audio', 'slug' => 'audio', 'deskripsi' => 'Perangkat Audio']);
+        $brand = Merek::create(['nama_merek' => 'Sony', 'slug' => 'sony', 'logo_url' => '']);
+        $product = Produk::create([
+            'id_kategori' => $category->id_kategori,
+            'id_merek' => $brand->id_merek,
+            'nama_produk' => 'Sony WH-1000XM5',
+            'sku' => 'SNY-WH5-001',
+            'tipe_produk' => 'regular',
+            'kondisi' => 'baru',
+            'masa_garansi_bulan' => 12,
+            'deskripsi' => 'Headphone noise cancelling',
+            'gambar_path' => '',
+            'rating_rata_rata' => 5.0,
+            'jumlah_terjual' => 0,
+            'harga' => 4500000,
+            'stok' => 10,
+            'is_active' => true,
+        ]);
+
+        // Saat produk masih aktif: tombol Edit aktif, tombol Hapus dalam kondisi disabled
+        $this->actingAs($admin)
+            ->get(route('admin.manajemen_produk', ['tab' => 'produk']))
+            ->assertOk()
+            ->assertSee('Edit')
+            ->assertSee(route('admin.products.edit', $product->id_produk))
+            ->assertSee('Nonaktifkan')
+            ->assertSee('Hapus')
+            ->assertSee('btn-disabled')
+            ->assertSee('Nonaktifkan produk terlebih dahulu sebelum menghapus')
+            ->assertDontSee("openDeleteModal('{$product->id_produk}'", false);
+
+        // Halaman edit memiliki modal pop out card konfirmasi perubahan & dirty check notice
+        $this->actingAs($admin)
+            ->get(route('admin.products.edit', $product->id_produk))
+            ->assertOk()
+            ->assertSee('Konfirmasi Perubahan Produk')
+            ->assertSee('noChangesAlert')
+            ->assertSee('modalChangesList')
+            ->assertSee('Belum ada perubahan data!');
+
+        // Nonaktifkan produk terlebih dahulu
+        $this->actingAs($admin)
+            ->patch(route('admin.products.status', $product->id_produk));
+
+        $this->assertDatabaseHas('produk', [
+            'id_produk' => $product->id_produk,
+            'is_active' => false,
+        ]);
+
+        // Setelah dinonaktifkan: tombol Edit dinonaktifkan (disabled), tombol Hapus aktif dan modal pop out card konfirmasi hapus tersedia
+        $this->actingAs($admin)
+            ->get(route('admin.manajemen_produk', ['tab' => 'produk']))
+            ->assertOk()
+            ->assertSee('Aktifkan')
+            ->assertSee('Aktifkan produk terlebih dahulu untuk dapat mengedit')
+            ->assertSee("openDeleteModal('{$product->id_produk}'", false)
+            ->assertSee('Konfirmasi Hapus Produk');
+
+        // Eksekusi hapus produk
+        $this->actingAs($admin)
+            ->delete(route('admin.products.destroy', $product->id_produk))
+            ->assertRedirect(route('admin.products.index'))
+            ->assertSessionHas('success', 'Produk berhasil dihapus.');
+
+        $this->assertDatabaseMissing('produk', [
+            'id_produk' => $product->id_produk,
+        ]);
+    }
+
+    public function test_customer_and_admin_can_search_products_by_category_keyword(): void
+    {
+        $admin = $this->createAdmin();
+        $customer = User::create([
+            'nama_lengkap' => 'Search Tester',
+            'nomor_telepon' => '089999999999',
+            'username' => 'searchtester',
+            'password_hash' => Hash::make('password'),
+            'role' => 'customer',
+        ]);
+
+        $catKeyboard = Kategori::create([
+            'nama_kategori' => 'Keyboard Mechanical',
+            'slug' => 'keyboard-mechanical',
+            'deskripsi' => 'Aksesoris Keyboard',
+        ]);
+        $brand = Merek::create([
+            'nama_merek' => 'Keychron',
+            'logo_url' => '',
+        ]);
+
+        $product = Produk::create([
+            'id_kategori' => $catKeyboard->id_kategori,
+            'id_merek' => $brand->id_merek,
+            'nama_produk' => 'K2 Pro Wireless',
+            'sku' => 'KEY-K2-001',
+            'tipe_produk' => 'regular',
+            'kondisi' => 'baru',
+            'masa_garansi_bulan' => 12,
+            'deskripsi' => 'Custom mechanical keyboard',
+            'gambar_path' => '',
+            'rating_rata_rata' => 4.9,
+            'jumlah_terjual' => 15,
+            'harga' => 1500000,
+            'stok' => 5,
+            'is_active' => true,
+        ]);
+
+        // Customer mencari dengan kata kunci kategori "Mechanical"
+        $this->actingAs($customer)
+            ->get(route('dashboard', ['search' => 'Mechanical']))
+            ->assertOk()
+            ->assertSee('K2 Pro Wireless')
+            ->assertSee('Keyboard Mechanical');
+
+        // Admin mencari dengan kata kunci kategori "Mechanical" di tab produk
+        $this->actingAs($admin)
+            ->get(route('admin.manajemen_produk', ['tab' => 'produk', 'search' => 'Mechanical']))
+            ->assertOk()
+            ->assertSee('K2 Pro Wireless')
+            ->assertSee('Keyboard Mechanical');
+
+        // Admin mencari dengan kata kunci nama produk "K2 Pro"
+        $this->actingAs($admin)
+            ->get(route('admin.manajemen_produk', ['tab' => 'produk', 'search' => 'K2 Pro']))
+            ->assertOk()
+            ->assertSee('K2 Pro Wireless');
+    }
+
     private function createAdmin(): User
     {
         return User::create([

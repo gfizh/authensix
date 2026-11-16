@@ -758,7 +758,7 @@
     /* Action Buttons */
     .actions-col {
       text-align: right;
-      min-width: 190px;
+      min-width: 240px;
     }
 
     .action-stack {
@@ -827,6 +827,54 @@
       border-color: #ef4444;
     }
 
+    .btn-outline-danger:disabled,
+    .btn-outline-danger.btn-disabled {
+      opacity: 0.45;
+      cursor: not-allowed;
+      border-color: #fca5a5;
+      color: #ef4444;
+      background: #ffffff;
+      pointer-events: auto;
+    }
+
+    .btn-outline-danger:disabled:hover,
+    .btn-outline-danger.btn-disabled:hover {
+      background: #ffffff;
+      border-color: #fca5a5;
+    }
+
+    .btn-outline-warning {
+      border: 1.5px solid #fed7aa;
+      color: #ea580c;
+      background: #ffffff;
+      font-size: 12px;
+      font-weight: 600;
+      padding: 6px 12px;
+      border-radius: 8px;
+      transition: all 0.15s ease;
+    }
+
+    .btn-outline-warning:hover {
+      background: #fff7ed;
+      border-color: #ea580c;
+    }
+
+    .btn-outline-success {
+      border: 1.5px solid #bbf7d0;
+      color: #16a34a;
+      background: #ffffff;
+      font-size: 12px;
+      font-weight: 600;
+      padding: 6px 12px;
+      border-radius: 8px;
+      transition: all 0.15s ease;
+    }
+
+    .btn-outline-success:hover {
+      background: #f0fdf4;
+      border-color: #16a34a;
+    }
+
     .btn-outline-neutral {
       border: 1.5px solid #cbd5e1;
       color: #334155;
@@ -842,6 +890,23 @@
       border-color: var(--primary);
       color: var(--primary);
       background: #eff6ff;
+    }
+
+    .btn-outline-neutral:disabled,
+    .btn-outline-neutral.btn-disabled {
+      opacity: 0.45;
+      cursor: not-allowed;
+      border-color: #cbd5e1;
+      color: #94a3b8;
+      background: #ffffff;
+      pointer-events: auto;
+    }
+
+    .btn-outline-neutral:disabled:hover,
+    .btn-outline-neutral.btn-disabled:hover {
+      background: #ffffff;
+      border-color: #cbd5e1;
+      color: #94a3b8;
     }
 
     .resi-details {
@@ -946,85 +1011,130 @@
         padding: 16px;
       }
     }
+
+    /* Pop Out Card Modal */
+    .modal-backdrop {
+      position: fixed;
+      inset: 0;
+      background: rgba(15, 23, 42, 0.55);
+      backdrop-filter: blur(4px);
+      z-index: 9999;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 16px;
+      animation: modalFadeIn 0.18s ease;
+    }
+
+    .modal-card {
+      background: #ffffff;
+      border-radius: 16px;
+      width: 100%;
+      max-width: 440px;
+      padding: 24px;
+      box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.12), 0 8px 10px -6px rgba(0, 0, 0, 0.08);
+      border: 1px solid #e2e8f0;
+      text-align: center;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      animation: modalScaleUp 0.18s ease;
+    }
+
+    @keyframes modalFadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+
+    @keyframes modalScaleUp {
+      from { opacity: 0; transform: scale(0.95); }
+      to { opacity: 1; transform: scale(1); }
+    }
+
+    .modal-icon {
+      width: 52px;
+      height: 52px;
+      border-radius: 50%;
+      display: grid;
+      place-items: center;
+      margin-bottom: 16px;
+    }
+
+    .modal-icon svg {
+      width: 24px;
+      height: 24px;
+    }
+
+    .modal-icon-danger {
+      background: #fee2e2;
+      color: #dc2626;
+    }
+
+    .modal-icon-primary {
+      background: #eff6ff;
+      color: #1673e6;
+    }
+
+    .modal-title {
+      font-size: 18px;
+      font-weight: 700;
+      color: #0f172a;
+      margin-bottom: 8px;
+    }
+
+    .modal-desc {
+      font-size: 13.5px;
+      color: #64748b;
+      line-height: 1.5;
+      margin-bottom: 24px;
+    }
+
+    .modal-actions {
+      display: flex;
+      gap: 10px;
+      width: 100%;
+      justify-content: flex-end;
+    }
+
+    .btn-modal-cancel {
+      flex: 1;
+      background: #f1f5f9;
+      color: #475569;
+      padding: 10px 16px;
+      border-radius: 10px;
+      font-size: 13px;
+      font-weight: 600;
+      transition: background 0.15s ease;
+      border: 0;
+      cursor: pointer;
+    }
+
+    .btn-modal-cancel:hover {
+      background: #e2e8f0;
+      color: #1e293b;
+    }
+
+    .btn-modal-danger {
+      flex: 1.2;
+      background: #dc2626;
+      color: #ffffff;
+      padding: 10px 16px;
+      border-radius: 10px;
+      font-size: 13px;
+      font-weight: 600;
+      transition: background 0.15s ease;
+      border: 0;
+      cursor: pointer;
+    }
+
+    .btn-modal-danger:hover {
+      background: #b91c1c;
+    }
   </style>
 </head>
 <body>
 
-  <!-- =====================================================
-       LEFT SIDEBAR
-       ===================================================== -->
-  <aside class="sidebar" aria-label="Menu Admin">
-    <div class="sidebar-brand">
-      <a href="{{ route('admin.dashboard-admin') }}" class="brand-link" aria-label="AuthenSIX Computer">
-        <div class="brand-text">Authen<b>SIX</b></div>
-        <small class="brand-sub">COMPUTER</small>
-      </a>
-    </div>
-
-    <nav class="sidebar-nav">
-      <a href="{{ route('admin.dashboard-admin') }}" class="nav-item">
-        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-          <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
-          <polyline points="9 22 9 12 15 12 15 22"/>
-        </svg>
-        <span>Dashboard</span>
-      </a>
-
-      <a href="{{ route('admin.manajemen_produk', ['tab' => 'pesanan']) }}"
-         class="nav-item {{ $activeTab === 'pesanan' ? 'active' : '' }}"
-         @if($activeTab === 'pesanan') aria-current="page" @endif>
-        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-          <path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2"/>
-          <rect x="9" y="3" width="6" height="4" rx="1"/>
-          <path d="M9 12h6"/>
-          <path d="M9 16h6"/>
-        </svg>
-        <span>Manajemen Pesanan</span>
-      </a>
-
-      <a href="{{ route('admin.manajemen_produk', ['tab' => 'produk']) }}"
-         class="nav-item {{ $activeTab === 'produk' ? 'active' : '' }}"
-         @if($activeTab === 'produk') aria-current="page" @endif>
-        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-          <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/>
-          <polyline points="3.27 6.96 12 12.01 20.73 6.96"/>
-          <line x1="12" y1="22.08" x2="12" y2="12"/>
-        </svg>
-        <span>Product</span>
-      </a>
-
-      <a href="{{ route('admin.tambah_produk') }}" class="nav-item">
-        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-          <circle cx="12" cy="12" r="9"/>
-          <line x1="12" y1="8" x2="12" y2="16"/>
-          <line x1="8" y1="12" x2="16" y2="12"/>
-        </svg>
-        <span>Tambah Produk</span>
-      </a>
-    </nav>
-
-    <div class="sidebar-footer">
-      <div class="user-card">
-        <div class="user-avatar" title="{{ auth()->user()->nama_lengkap ?? 'Admin' }}">
-          {{ strtoupper(substr(auth()->user()->nama_lengkap ?? auth()->user()->username ?? 'A', 0, 2)) }}
-        </div>
-        <div class="user-meta">
-          <div class="user-name">{{ auth()->user()->nama_lengkap ?? auth()->user()->username ?? 'Admin' }}</div>
-          <div class="user-role">{{ auth()->user()->isAdmin() ? 'administrator' : (auth()->user()->role ?? 'administrator') }}</div>
-        </div>
-        <form method="POST" action="{{ route('logout') }}" class="logout-form">
-          @csrf
-          <button type="submit" class="logout-btn" title="Keluar dari akun">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
-              <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
-              <polyline points="16 17 21 12 16 7"/>
-              <line x1="21" y1="12" x2="9" y2="12"/>
-            </svg>
-          </button>
-        </form>
-      </div>
-    </div>
-  </aside>
+  @include('admin.partials.sidebar')
 
   <!-- =====================================================
        MAIN LAYOUT
@@ -1052,7 +1162,7 @@
             name="search"
             value="{{ $filters['search'] ?? '' }}"
             class="search-input"
-            placeholder="{{ $activeTab === 'produk' ? 'Cari produk atau SKU...' : 'Cari order, kostumer, produk...' }}"
+            placeholder="{{ $activeTab === 'produk' ? 'Cari nama produk, kategori, atau SKU...' : 'Cari order, kostumer, produk, kategori...' }}"
             aria-label="Cari"
           >
         </form>
@@ -1485,14 +1595,41 @@
 
                     <td class="actions-col">
                       <div class="action-row">
-                        <a href="{{ route('admin.products.edit', $produk->id_produk) }}" class="btn-outline-neutral">Edit</a>
+                        @if ($produk->is_active)
+                          <a href="{{ route('admin.products.edit', $produk->id_produk) }}"
+                             class="btn-outline-neutral">
+                            Edit
+                          </a>
+                        @else
+                          <button type="button"
+                                  class="btn-outline-neutral btn-disabled"
+                                  disabled
+                                  title="Aktifkan produk terlebih dahulu untuk dapat mengedit">
+                            Edit
+                          </button>
+                        @endif
                         <form action="{{ route('admin.products.status', $produk->id_produk) }}" method="POST">
                           @csrf
                           @method('PATCH')
-                          <button type="submit" class="btn-outline-danger">
+                          <button type="submit" class="{{ $produk->is_active ? 'btn-outline-warning' : 'btn-outline-success' }}" title="{{ $produk->is_active ? 'Nonaktifkan produk (sembunyikan sementara dari pembeli)' : 'Aktifkan produk (tampilkan kembali ke pembeli)' }}">
                             {{ $produk->is_active ? 'Nonaktifkan' : 'Aktifkan' }}
                           </button>
                         </form>
+                        @if ($produk->is_active)
+                          <button type="button"
+                                  class="btn-outline-danger btn-disabled"
+                                  disabled
+                                  title="Nonaktifkan produk terlebih dahulu sebelum menghapus">
+                            Hapus
+                          </button>
+                        @else
+                          <button type="button"
+                                  class="btn-outline-danger"
+                                  onclick="openDeleteModal('{{ $produk->id_produk }}', '{{ addslashes($produk->nama_produk) }}')"
+                                  title="Hapus produk permanen">
+                            Hapus
+                          </button>
+                        @endif
                       </div>
                     </td>
                   </tr>
@@ -1514,5 +1651,71 @@
       @endif
     </main>
   </div>
+  <!-- Hidden form to process delete -->
+  <form id="globalDeleteForm" method="POST" style="display:none;">
+    @csrf
+    @method('DELETE')
+  </form>
+
+  <!-- =====================================================
+       POP OUT CARD MODAL: KONFIRMASI HAPUS PRODUK
+       ===================================================== -->
+  <div id="deleteModalBackdrop" class="modal-backdrop" aria-hidden="true" style="display:none;">
+    <div class="modal-card" role="dialog" aria-modal="true" aria-labelledby="modalDeleteTitle">
+      <div class="modal-icon modal-icon-danger">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <polyline points="3 6 5 6 21 6"/>
+          <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
+          <line x1="10" y1="11" x2="10" y2="17"/>
+          <line x1="14" y1="11" x2="14" y2="17"/>
+        </svg>
+      </div>
+      <div class="modal-content">
+        <h3 id="modalDeleteTitle" class="modal-title">Konfirmasi Hapus Produk</h3>
+        <p class="modal-desc">
+          Apakah Anda yakin ingin menghapus produk <strong id="modalDeleteProductName" style="color:var(--text-main);">-</strong> secara permanen? Tindakan ini tidak dapat dibatalkan dan produk akan dihapus dari sistem.
+        </p>
+      </div>
+      <div class="modal-actions">
+        <button type="button" class="btn-modal-cancel" onclick="closeDeleteModal()">Batal</button>
+        <button type="button" class="btn-modal-danger" id="btnConfirmDelete">Ya, Hapus Produk</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    function openDeleteModal(productId, productName) {
+      const backdrop = document.getElementById('deleteModalBackdrop');
+      const nameEl = document.getElementById('modalDeleteProductName');
+      const confirmBtn = document.getElementById('btnConfirmDelete');
+      const deleteForm = document.getElementById('globalDeleteForm');
+
+      if (!backdrop || !nameEl || !confirmBtn || !deleteForm) return;
+
+      nameEl.textContent = productName;
+      deleteForm.action = '{{ url('admin/products') }}/' + productId;
+
+      confirmBtn.onclick = function() {
+        deleteForm.submit();
+      };
+
+      backdrop.style.display = 'flex';
+      document.body.style.overflow = 'hidden';
+    }
+
+    function closeDeleteModal() {
+      const backdrop = document.getElementById('deleteModalBackdrop');
+      if (backdrop) backdrop.style.display = 'none';
+      document.body.style.overflow = '';
+    }
+
+    document.getElementById('deleteModalBackdrop')?.addEventListener('click', function(e) {
+      if (e.target === this) closeDeleteModal();
+    });
+
+    document.addEventListener('keydown', function(e) {
+      if (e.key === 'Escape') closeDeleteModal();
+    });
+  </script>
 </body>
 </html>

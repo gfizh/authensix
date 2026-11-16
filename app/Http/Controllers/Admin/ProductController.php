@@ -44,7 +44,10 @@ class ProductController extends Controller
 
                     $query->where(function ($subQuery) use ($search) {
                         $subQuery->where('nama_produk', 'like', $search)
-                            ->orWhere('sku', 'like', $search);
+                            ->orWhere('sku', 'like', $search)
+                            ->orWhereHas('kategori', function ($catQuery) use ($search) {
+                                $catQuery->where('nama_kategori', 'like', $search);
+                            });
                     });
                 }
             )

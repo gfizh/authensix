@@ -91,7 +91,10 @@ class OrderController extends Controller
                                     ->orWhere('username', 'like', $search);
                             })
                             ->orWhereHas('items.produk', function ($productQuery) use ($search): void {
-                                $productQuery->where('nama_produk', 'like', $search);
+                                $productQuery->where('nama_produk', 'like', $search)
+                                    ->orWhereHas('kategori', function ($catQuery) use ($search): void {
+                                        $catQuery->where('nama_kategori', 'like', $search);
+                                    });
                             });
                     });
                 }
@@ -116,7 +119,10 @@ class OrderController extends Controller
 
                     $query->where(function ($subQuery) use ($search): void {
                         $subQuery->where('nama_produk', 'like', $search)
-                            ->orWhere('sku', 'like', $search);
+                            ->orWhere('sku', 'like', $search)
+                            ->orWhereHas('kategori', function ($catQuery) use ($search): void {
+                                $catQuery->where('nama_kategori', 'like', $search);
+                            });
                     });
                 }
             )
