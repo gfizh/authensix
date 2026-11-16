@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Middleware\EnsureUserIsSuperAdmin;
 use App\Http\Middleware\EnsureUserIsAdmin;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
@@ -16,18 +17,23 @@ return Application::configure(basePath: dirname(__DIR__))
     ->withMiddleware(function (Middleware $middleware): void {
         $middleware->statefulApi();
         $middleware->redirectTo(
-            guests: '/login',
-            users: function (Request $request) {
-                if ($request->user()?->isAdmin()) {
-                    return route('admin.dashboard-admin');
-                }
+        guests: '/login',
+        users: function (Request $request) {
+            if ($request->user()?->isSuperAdmin()) {
+                return route('superadmin.dashboard');
+            }
 
-                return route('dashboard');
-            },
-        );
+            if ($request->user()?->isAdmin()) {
+                return route('admin.dashboard-admin');
+            }
+
+            return route('dashboard');
+        },
+    );
 
         $middleware->alias([
             'admin' => EnsureUserIsAdmin::class,
+            'superadmin' => EnsureUserIsSuperAdmin::class
         ]);
     })
 
