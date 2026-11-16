@@ -26,10 +26,16 @@ class ProductController extends Controller
         $filters = $request->validate([
             'search' => ['nullable', 'string', 'max:100'],
             'status' => ['nullable', Rule::in(['all', 'active', 'inactive'])],
+            'sort' => [
+                'nullable',
+                Rule::in(['latest', 'price_asc', 'price_desc']),
+            ],
         ]);
 
-        $products = Produk::query()
+        $query = Produk::query()
             ->with(['kategori', 'merek'])
+
+            // Pencarian nama produk dan SKU
             ->when(
                 filled($filters['search'] ?? null),
                 function ($query) use ($filters) {
@@ -41,6 +47,8 @@ class ProductController extends Controller
                     });
                 }
             )
+
+            // Filter status produk
             ->when(
                 ($filters['status'] ?? 'all') === 'active',
                 fn ($query) => $query->where('is_active', true)
@@ -48,8 +56,20 @@ class ProductController extends Controller
             ->when(
                 ($filters['status'] ?? 'all') === 'inactive',
                 fn ($query) => $query->where('is_active', false)
-            )
-            ->orderByDesc('created_at')
+            );
+
+        // Pengurutan produk
+        $sort = $filters['sort'] ?? 'latest';
+
+        if ($sort === 'price_asc') {
+            $query->orderBy('harga', 'asc');
+        } elseif ($sort === 'price_desc') {
+            $query->orderBy('harga', 'desc');
+        } else {
+            $query->orderByDesc('created_at');
+        }
+
+        $products = $query
             ->paginate(10)
             ->withQueryString();
 
@@ -405,5 +425,24 @@ class ProductController extends Controller
                 'max:2048',
             ],
         ];
+    }
+    /**
+     * Menghapus produk beserta gambar.
+     */
+    public function destroy(Produk $produk): RedirectResponse
+    {
+        $imagePath = $produk->gambar_path;
+
+        // Hapus data produk
+        $produk->delete();
+
+        // Hapus file gambar jika tersedia
+        if ($imagePath) {
+            Storage::disk('public')->delete($imagePath);
+        }
+
+        return redirect()
+            ->route('admin.products.index')
+            ->with('success', 'Produk berhasil dihapus.');
     }
 }
