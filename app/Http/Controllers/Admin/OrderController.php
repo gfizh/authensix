@@ -45,6 +45,8 @@ class OrderController extends Controller
                 ]),
             ],
             'product_status' => ['nullable', Rule::in(['all', 'active', 'inactive'])],
+            'sort_by' => ['nullable', Rule::in(['price', 'name', 'updated_at', 'harga', 'nama', 'terbaru'])],
+            'sort_order' => ['nullable', Rule::in(['asc', 'desc'])],
         ]);
 
         $activeTab = $filters['tab'] ?? $defaultTab;
@@ -109,6 +111,13 @@ class OrderController extends Controller
             ->withQueryString();
 
         $productStatusFilter = $filters['product_status'] ?? 'all';
+        $sortBy = match ($filters['sort_by'] ?? null) {
+            'price', 'harga' => 'harga',
+            'name', 'nama' => 'nama_produk',
+            'updated_at', 'terbaru' => 'updated_at',
+            default => null,
+        };
+        $sortOrder = strtolower($filters['sort_order'] ?? '') === 'desc' ? 'desc' : 'asc';
 
         $products = Produk::query()
             ->with(['kategori', 'merek'])
@@ -134,7 +143,11 @@ class OrderController extends Controller
                 $productStatusFilter === 'inactive',
                 fn ($query) => $query->where('is_active', false)
             )
-            ->orderByDesc('id_produk')
+            ->when(
+                $sortBy !== null,
+                fn ($query) => $query->orderBy($sortBy, $sortOrder)->orderByDesc('id_produk'),
+                fn ($query) => $query->orderByDesc('id_produk')
+            )
             ->paginate(10, ['*'], 'products_page')
             ->withQueryString();
 

@@ -10,6 +10,7 @@ use App\Models\Pesanan;
 use App\Models\Produk;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Tests\TestCase;
 
@@ -300,6 +301,158 @@ class OrderFlowTest extends TestCase
             'password_hash' => Hash::make('admin123'),
             'role' => 'admin',
         ]);
+    }
+
+    public function test_admin_can_sort_products_by_price_name_and_recently_updated_in_both_directions(): void
+    {
+        $admin = $this->createAdmin();
+        $cat = Kategori::create(['nama_kategori' => 'Hardware', 'slug' => 'hardware', 'deskripsi' => 'Hardware']);
+        $brand = Merek::create(['nama_merek' => 'Logitech', 'slug' => 'logitech', 'logo_url' => '']);
+
+        $productA = Produk::create([
+            'id_kategori' => $cat->id_kategori,
+            'id_merek' => $brand->id_merek,
+            'nama_produk' => 'Alpha Mouse G102',
+            'sku' => 'SKU-AAA',
+            'tipe_produk' => 'regular',
+            'kondisi' => 'baru',
+            'masa_garansi_bulan' => 12,
+            'deskripsi' => 'Mouse gaming',
+            'rating_rata_rata' => 4.5,
+            'jumlah_terjual' => 0,
+            'harga' => 150000,
+            'stok' => 10,
+            'is_active' => true,
+            'created_at' => now()->subDays(5),
+            'updated_at' => now()->subDays(5),
+        ]);
+
+        $productB = Produk::create([
+            'id_kategori' => $cat->id_kategori,
+            'id_merek' => $brand->id_merek,
+            'nama_produk' => 'Beta Headset Pro',
+            'sku' => 'SKU-BBB',
+            'tipe_produk' => 'regular',
+            'kondisi' => 'baru',
+            'masa_garansi_bulan' => 12,
+            'deskripsi' => 'Headset gaming',
+            'rating_rata_rata' => 4.8,
+            'jumlah_terjual' => 0,
+            'harga' => 850000,
+            'stok' => 5,
+            'is_active' => true,
+            'created_at' => now()->subDays(2),
+            'updated_at' => now()->subDays(2),
+        ]);
+
+        $productC = Produk::create([
+            'id_kategori' => $cat->id_kategori,
+            'id_merek' => $brand->id_merek,
+            'nama_produk' => 'Gamma Keyboard RGB',
+            'sku' => 'SKU-CCC',
+            'tipe_produk' => 'regular',
+            'kondisi' => 'baru',
+            'masa_garansi_bulan' => 12,
+            'deskripsi' => 'Keyboard mechanical',
+            'rating_rata_rata' => 4.9,
+            'jumlah_terjual' => 0,
+            'harga' => 450000,
+            'stok' => 8,
+            'is_active' => true,
+        ]);
+
+        DB::table('produk')->where('id_produk', $productA->id_produk)->update(['updated_at' => now()->subDays(5)]);
+        DB::table('produk')->where('id_produk', $productB->id_produk)->update(['updated_at' => now()->subDays(2)]);
+        DB::table('produk')->where('id_produk', $productC->id_produk)->update(['updated_at' => now()]);
+
+        // 1. Tampilan default menampilkan tombol sorting
+        $this->actingAs($admin)
+            ->get(route('admin.manajemen_produk', ['tab' => 'produk']))
+            ->assertOk()
+            ->assertSee('Harga')
+            ->assertSee('Nama')
+            ->assertSee('Terakhir Diperbarui')
+            ->assertSee('sort_by=price', false)
+            ->assertSee('sort_by=name', false)
+            ->assertSee('sort_by=updated_at', false);
+
+        // 2. Sort by Price ASC (150k -> 450k -> 850k)
+        $resPriceAsc = $this->actingAs($admin)
+            ->get(route('admin.manajemen_produk', ['tab' => 'produk', 'sort_by' => 'price', 'sort_order' => 'asc']))
+            ->assertOk()
+            ->assertSee('Terendah')
+            ->assertSee('sort_order=desc', false); // Link tombol Harga berubah mengarah ke DESC
+
+        $contentPriceAsc = $resPriceAsc->getContent();
+        $posA = strpos($contentPriceAsc, 'Alpha Mouse G102');
+        $posC = strpos($contentPriceAsc, 'Gamma Keyboard RGB');
+        $posB = strpos($contentPriceAsc, 'Beta Headset Pro');
+        $this->assertTrue($posA < $posC && $posC < $posB, 'Price ASC should order 150k < 450k < 850k');
+
+        // 3. Sort by Price DESC (850k -> 450k -> 150k)
+        $resPriceDesc = $this->actingAs($admin)
+            ->get(route('admin.manajemen_produk', ['tab' => 'produk', 'sort_by' => 'price', 'sort_order' => 'desc']))
+            ->assertOk()
+            ->assertSee('Tertinggi')
+            ->assertSee('sort_order=asc', false); // Link tombol Harga berubah mengarah ke ASC
+
+        $contentPriceDesc = $resPriceDesc->getContent();
+        $posB = strpos($contentPriceDesc, 'Beta Headset Pro');
+        $posC = strpos($contentPriceDesc, 'Gamma Keyboard RGB');
+        $posA = strpos($contentPriceDesc, 'Alpha Mouse G102');
+        $this->assertTrue($posB < $posC && $posC < $posA, 'Price DESC should order 850k > 450k > 150k');
+
+        // 4. Sort by Name ASC (Alpha -> Beta -> Gamma)
+        $resNameAsc = $this->actingAs($admin)
+            ->get(route('admin.manajemen_produk', ['tab' => 'produk', 'sort_by' => 'name', 'sort_order' => 'asc']))
+            ->assertOk()
+            ->assertSee('A - Z')
+            ->assertSee('sort_order=desc', false);
+
+        $contentNameAsc = $resNameAsc->getContent();
+        $posA = strpos($contentNameAsc, 'Alpha Mouse G102');
+        $posB = strpos($contentNameAsc, 'Beta Headset Pro');
+        $posC = strpos($contentNameAsc, 'Gamma Keyboard RGB');
+        $this->assertTrue($posA < $posB && $posB < $posC, 'Name ASC should order Alpha < Beta < Gamma');
+
+        // 5. Sort by Name DESC (Gamma -> Beta -> Alpha)
+        $resNameDesc = $this->actingAs($admin)
+            ->get(route('admin.manajemen_produk', ['tab' => 'produk', 'sort_by' => 'name', 'sort_order' => 'desc']))
+            ->assertOk()
+            ->assertSee('Z - A')
+            ->assertSee('sort_order=asc', false);
+
+        $contentNameDesc = $resNameDesc->getContent();
+        $posC = strpos($contentNameDesc, 'Gamma Keyboard RGB');
+        $posB = strpos($contentNameDesc, 'Beta Headset Pro');
+        $posA = strpos($contentNameDesc, 'Alpha Mouse G102');
+        $this->assertTrue($posC < $posB && $posB < $posA, 'Name DESC should order Gamma > Beta > Alpha');
+
+        // 6. Sort by Recently Updated DESC (Gamma [now] -> Beta [2d] -> Alpha [5d])
+        $resUpDesc = $this->actingAs($admin)
+            ->get(route('admin.manajemen_produk', ['tab' => 'produk', 'sort_by' => 'updated_at', 'sort_order' => 'desc']))
+            ->assertOk()
+            ->assertSee('Terbaru')
+            ->assertSee('sort_order=asc', false);
+
+        $contentUpDesc = $resUpDesc->getContent();
+        $posC = strpos($contentUpDesc, 'Gamma Keyboard RGB');
+        $posB = strpos($contentUpDesc, 'Beta Headset Pro');
+        $posA = strpos($contentUpDesc, 'Alpha Mouse G102');
+        $this->assertTrue($posC < $posB && $posB < $posA, 'Updated DESC should order newest to oldest');
+
+        // 7. Sort by Recently Updated ASC (Alpha [5d] -> Beta [2d] -> Gamma [now])
+        $resUpAsc = $this->actingAs($admin)
+            ->get(route('admin.manajemen_produk', ['tab' => 'produk', 'sort_by' => 'updated_at', 'sort_order' => 'asc']))
+            ->assertOk()
+            ->assertSee('Terlama')
+            ->assertSee('sort_order=desc', false);
+
+        $contentUpAsc = $resUpAsc->getContent();
+        $posA = strpos($contentUpAsc, 'Alpha Mouse G102');
+        $posB = strpos($contentUpAsc, 'Beta Headset Pro');
+        $posC = strpos($contentUpAsc, 'Gamma Keyboard RGB');
+        $this->assertTrue($posA < $posB && $posB < $posC, 'Updated ASC should order oldest to newest');
     }
 
     /**

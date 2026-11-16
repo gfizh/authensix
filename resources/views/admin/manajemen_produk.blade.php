@@ -566,6 +566,73 @@
       color: #ffffff;
     }
 
+    .filter-pills-wrapper {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      flex-wrap: wrap;
+      width: 100%;
+    }
+
+    .filter-divider {
+      width: 1px;
+      height: 22px;
+      background: var(--border);
+      margin: 0 4px;
+    }
+
+    .filter-sort-pills {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .filter-sort-label {
+      font-size: 12px;
+      font-weight: 650;
+      color: var(--text-muted);
+      margin-right: 2px;
+    }
+
+    .filter-sort-pill {
+      cursor: pointer;
+      user-select: none;
+    }
+
+    .filter-sort-pill .sort-icon {
+      width: 13px;
+      height: 13px;
+      stroke-width: 2.5;
+    }
+
+    .filter-sort-pill .sort-icon-inactive {
+      opacity: 0.5;
+      stroke-width: 2;
+    }
+
+    .sort-direction-badge {
+      font-size: 10px;
+      font-weight: 700;
+      background: rgba(255, 255, 255, 0.25);
+      padding: 1px 6px;
+      border-radius: 4px;
+      text-transform: uppercase;
+      letter-spacing: 0.3px;
+    }
+
+    .filter-sort-reset {
+      color: #dc2626;
+      border-color: #fecaca;
+      background: #fef2f2;
+    }
+
+    .filter-sort-reset:hover {
+      background: #fee2e2;
+      border-color: #fca5a5;
+      color: #b91c1c;
+    }
+
     /* =====================================================
        TABLES & ORDER ROWS
        ===================================================== */
@@ -1523,19 +1590,103 @@
 
         <section class="main-card" aria-label="Daftar produk toko">
           <div class="filter-bar">
-            <div class="filter-pills">
-              <a href="{{ route('admin.manajemen_produk', ['tab' => 'produk', 'product_status' => 'all', 'search' => $filters['search'] ?? null]) }}"
-                 class="filter-pill {{ ($filters['product_status'] ?? 'all') === 'all' ? 'active' : '' }}">
-                Semua ({{ $productStats['total'] }})
-              </a>
-              <a href="{{ route('admin.manajemen_produk', ['tab' => 'produk', 'product_status' => 'active', 'search' => $filters['search'] ?? null]) }}"
-                 class="filter-pill {{ ($filters['product_status'] ?? '') === 'active' ? 'active' : '' }}">
-                Aktif ({{ $productStats['aktif'] }})
-              </a>
-              <a href="{{ route('admin.manajemen_produk', ['tab' => 'produk', 'product_status' => 'inactive', 'search' => $filters['search'] ?? null]) }}"
-                 class="filter-pill {{ ($filters['product_status'] ?? '') === 'inactive' ? 'active' : '' }}">
-                Nonaktif ({{ $productStats['nonaktif'] }})
-              </a>
+            <div class="filter-pills-wrapper">
+              <div class="filter-pills">
+                <a href="{{ route('admin.manajemen_produk', array_merge(request()->query(), ['tab' => 'produk', 'product_status' => 'all'])) }}"
+                   class="filter-pill {{ ($filters['product_status'] ?? 'all') === 'all' ? 'active' : '' }}">
+                  Semua ({{ $productStats['total'] }})
+                </a>
+                <a href="{{ route('admin.manajemen_produk', array_merge(request()->query(), ['tab' => 'produk', 'product_status' => 'active'])) }}"
+                   class="filter-pill {{ ($filters['product_status'] ?? '') === 'active' ? 'active' : '' }}">
+                  Aktif ({{ $productStats['aktif'] }})
+                </a>
+                <a href="{{ route('admin.manajemen_produk', array_merge(request()->query(), ['tab' => 'produk', 'product_status' => 'inactive'])) }}"
+                   class="filter-pill {{ ($filters['product_status'] ?? '') === 'inactive' ? 'active' : '' }}">
+                  Nonaktif ({{ $productStats['nonaktif'] }})
+                </a>
+              </div>
+
+              <div class="filter-divider" aria-hidden="true"></div>
+
+              <div class="filter-sort-pills">
+                <span class="filter-sort-label">Urutkan:</span>
+
+                {{-- Sort By Harga (Price) --}}
+                @php
+                  $isPriceActive = ($filters['sort_by'] ?? '') === 'price';
+                  $currentPriceOrder = $isPriceActive ? ($filters['sort_order'] ?? 'asc') : null;
+                  $nextPriceOrder = $isPriceActive && $currentPriceOrder === 'asc' ? 'desc' : 'asc';
+                @endphp
+                <a href="{{ route('admin.manajemen_produk', array_merge(request()->query(), ['tab' => 'produk', 'sort_by' => 'price', 'sort_order' => $nextPriceOrder])) }}"
+                   class="filter-pill filter-sort-pill {{ $isPriceActive ? 'active' : '' }}"
+                   title="Urutkan Harga: {{ $isPriceActive && $currentPriceOrder === 'asc' ? 'Klik untuk urutan Tertinggi ke Terendah' : 'Klik untuk urutan Terendah ke Tertinggi' }}">
+                  <span>Harga</span>
+                  @if ($isPriceActive && $currentPriceOrder === 'desc')
+                    <svg class="sort-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"><polyline points="6 9 12 15 18 9"/></svg>
+                    <span class="sort-direction-badge">Tertinggi</span>
+                  @elseif ($isPriceActive)
+                    <svg class="sort-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"><polyline points="18 15 12 9 6 15"/></svg>
+                    <span class="sort-direction-badge">Terendah</span>
+                  @else
+                    <svg class="sort-icon sort-icon-inactive" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M7 15l5 5 5-5M7 9l5-5 5 5"/></svg>
+                  @endif
+                </a>
+
+                {{-- Sort By Nama (Name) --}}
+                @php
+                  $isNameActive = ($filters['sort_by'] ?? '') === 'name';
+                  $currentNameOrder = $isNameActive ? ($filters['sort_order'] ?? 'asc') : null;
+                  $nextNameOrder = $isNameActive && $currentNameOrder === 'asc' ? 'desc' : 'asc';
+                @endphp
+                <a href="{{ route('admin.manajemen_produk', array_merge(request()->query(), ['tab' => 'produk', 'sort_by' => 'name', 'sort_order' => $nextNameOrder])) }}"
+                   class="filter-pill filter-sort-pill {{ $isNameActive ? 'active' : '' }}"
+                   title="Urutkan Nama: {{ $isNameActive && $currentNameOrder === 'asc' ? 'Klik untuk Z - A' : 'Klik untuk A - Z' }}">
+                  <span>Nama</span>
+                  @if ($isNameActive && $currentNameOrder === 'desc')
+                    <svg class="sort-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"><polyline points="6 9 12 15 18 9"/></svg>
+                    <span class="sort-direction-badge">Z - A</span>
+                  @elseif ($isNameActive)
+                    <svg class="sort-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"><polyline points="18 15 12 9 6 15"/></svg>
+                    <span class="sort-direction-badge">A - Z</span>
+                  @else
+                    <svg class="sort-icon sort-icon-inactive" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M7 15l5 5 5-5M7 9l5-5 5 5"/></svg>
+                  @endif
+                </a>
+
+                {{-- Sort By Terakhir Diperbarui (Recently Updated) --}}
+                @php
+                  $isUpdateActive = ($filters['sort_by'] ?? '') === 'updated_at';
+                  $currentUpdateOrder = $isUpdateActive ? ($filters['sort_order'] ?? 'desc') : null;
+                  $nextUpdateOrder = $isUpdateActive && $currentUpdateOrder === 'desc' ? 'asc' : 'desc';
+                @endphp
+                <a href="{{ route('admin.manajemen_produk', array_merge(request()->query(), ['tab' => 'produk', 'sort_by' => 'updated_at', 'sort_order' => $nextUpdateOrder])) }}"
+                   class="filter-pill filter-sort-pill {{ $isUpdateActive ? 'active' : '' }}"
+                   title="Urutkan Terakhir Diperbarui: {{ $isUpdateActive && $currentUpdateOrder === 'desc' ? 'Klik untuk Terlama Diperbarui' : 'Klik untuk Terbaru Diperbarui' }}">
+                  <span>Terakhir Diperbarui</span>
+                  @if ($isUpdateActive && $currentUpdateOrder === 'asc')
+                    <svg class="sort-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"><polyline points="18 15 12 9 6 15"/></svg>
+                    <span class="sort-direction-badge">Terlama</span>
+                  @elseif ($isUpdateActive)
+                    <svg class="sort-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"><polyline points="6 9 12 15 18 9"/></svg>
+                    <span class="sort-direction-badge">Terbaru</span>
+                  @else
+                    <svg class="sort-icon sort-icon-inactive" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M7 15l5 5 5-5M7 9l5-5 5 5"/></svg>
+                  @endif
+                </a>
+
+                @if (!empty($filters['sort_by']))
+                  @php
+                    $resetQuery = request()->query();
+                    unset($resetQuery['sort_by'], $resetQuery['sort_order']);
+                  @endphp
+                  <a href="{{ route('admin.manajemen_produk', $resetQuery) }}"
+                     class="filter-pill filter-sort-reset"
+                     title="Reset urutan ke default">
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                    <span>Reset</span>
+                  </a>
+                @endif
+              </div>
             </div>
           </div>
 
@@ -1543,9 +1694,31 @@
             <table class="data-table">
               <thead>
                 <tr>
-                  <th scope="col">Produk</th>
+                  <th scope="col">
+                    <a href="{{ route('admin.manajemen_produk', array_merge(request()->query(), ['tab' => 'produk', 'sort_by' => 'name', 'sort_order' => $nextNameOrder])) }}"
+                       style="color: inherit; text-decoration: none; display: inline-flex; align-items: center; gap: 4px;"
+                       title="Urutkan berdasarkan Nama">
+                      <span>Produk</span>
+                      @if ($isNameActive && $currentNameOrder === 'desc')
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
+                      @elseif ($isNameActive)
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="18 15 12 9 6 15"/></svg>
+                      @endif
+                    </a>
+                  </th>
                   <th scope="col">Kategori &amp; Merek</th>
-                  <th scope="col">Harga</th>
+                  <th scope="col">
+                    <a href="{{ route('admin.manajemen_produk', array_merge(request()->query(), ['tab' => 'produk', 'sort_by' => 'price', 'sort_order' => $nextPriceOrder])) }}"
+                       style="color: inherit; text-decoration: none; display: inline-flex; align-items: center; gap: 4px;"
+                       title="Urutkan berdasarkan Harga">
+                      <span>Harga</span>
+                      @if ($isPriceActive && $currentPriceOrder === 'desc')
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
+                      @elseif ($isPriceActive)
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="18 15 12 9 6 15"/></svg>
+                      @endif
+                    </a>
+                  </th>
                   <th scope="col">Stok</th>
                   <th scope="col">Status</th>
                   <th scope="col">Aksi</th>
@@ -1567,7 +1740,7 @@
                         </div>
                         <div class="item-info">
                           <div class="item-name">{{ $produk->nama_produk }}</div>
-                          <div class="item-meta">SKU: {{ $produk->sku }} &middot; {{ $produk->jumlah_terjual }} terjual</div>
+                          <div class="item-meta">SKU: {{ $produk->sku }} &middot; {{ $produk->jumlah_terjual }} terjual &middot; Update: {{ $produk->updated_at ? $produk->updated_at->format('d/m/Y') : '-' }}</div>
                         </div>
                       </div>
                     </td>
