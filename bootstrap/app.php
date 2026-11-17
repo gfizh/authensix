@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Middleware\EnsureUserIsAdmin;
+use App\Http\Middleware\EnsureUserIsSuperAdmin;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
@@ -18,6 +19,10 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->redirectTo(
             guests: '/login',
             users: function (Request $request) {
+                if ($request->user()?->isSuperAdmin()) {
+                    return route('superadmin.dashboard');
+                }
+
                 if ($request->user()?->isAdmin()) {
                     return route('admin.dashboard-admin');
                 }
@@ -28,6 +33,7 @@ return Application::configure(basePath: dirname(__DIR__))
 
         $middleware->alias([
             'admin' => EnsureUserIsAdmin::class,
+            'superadmin' => EnsureUserIsSuperAdmin::class,
         ]);
     })
 

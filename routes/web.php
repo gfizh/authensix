@@ -12,6 +12,9 @@ use App\Http\Controllers\Admin\UserController as AdminUserController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\LoginController;
 use App\Http\Controllers\OrderHistoryController;
+use App\Http\Controllers\SuperAdmin\SuperAdminDashboardController;
+use App\Http\Controllers\SuperAdmin\SuperAdminTransactionController;
+use App\Http\Controllers\SuperAdmin\SuperAdminUserController;
 use App\Models\Kategori;
 use App\Models\Pesanan;
 use Illuminate\Http\Request;
@@ -23,8 +26,16 @@ use Illuminate\Support\Facades\Route;
 // =====================================================
 
 Route::get('/', function (Request $request) {
+    if ($request->user()?->isSuperAdmin()) {
+        return redirect()->route('superadmin.dashboard');
+    }
+
     if ($request->user()?->isAdmin()) {
         return redirect()->route('admin.dashboard-admin');
+    }
+
+    if ($request->user()?->isCustomer()) {
+        return redirect()->route('dashboard');
     }
 
     return redirect()->route('login');
@@ -295,4 +306,47 @@ Route::middleware(['auth', 'admin'])
             'updateStatus',
         ])->name('payments.status');
 
+    });
+Route::middleware(['auth', 'superadmin'])
+    ->prefix('superadmin')
+    ->name('superadmin.')
+    ->group(function () {
+
+        // Dashboard
+        Route::get(
+            '/dashboard',
+            SuperAdminDashboardController::class
+        )->name('dashboard');
+
+        // Manajemen pengguna
+        Route::get(
+            '/users',
+            [SuperAdminUserController::class, 'index']
+        )->name('users.index');
+
+        Route::post(
+            '/users',
+            [SuperAdminUserController::class, 'store']
+        )->name('users.store');
+
+        Route::get(
+            '/users/{user}',
+            [SuperAdminUserController::class, 'show']
+        )->name('users.show');
+
+        Route::put(
+            '/users/{user}',
+            [SuperAdminUserController::class, 'update']
+        )->name('users.update');
+
+        // Monitoring transaksi
+        Route::get(
+            '/transactions',
+            [SuperAdminTransactionController::class, 'index']
+        )->name('transactions.index');
+
+        Route::get(
+            '/transactions/{pesanan}',
+            [SuperAdminTransactionController::class, 'show']
+        )->name('transactions.show');
     });
