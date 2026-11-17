@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\SuperAdmin;
 
 use App\Http\Controllers\Controller;
+use App\Models\ActionLog;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
@@ -27,6 +28,7 @@ class SuperAdminUserController extends Controller
                 $query->where(function ($q) use ($search) {
                     $q->where('nama_lengkap', 'like', "%{$search}%")
                         ->orWhere('username', 'like', "%{$search}%")
+                        ->orWhere('email', 'like', "%{$search}%")
                         ->orWhere('nomor_telepon', 'like', "%{$search}%");
                 });
             })
@@ -39,32 +41,63 @@ class SuperAdminUserController extends Controller
         return response()->json($users);
     }
 
-    // Membuat akun CUSTOMER atau ADMIN
+    // Form tampilan tambah akun
+    public function create()
+    {
+        return view('super_admin.buat_akun');
+    }
+
+    // Membuat akun (Customer, Admin, atau Superadmin)
     public function store(Request $request)
     {
         $validated = $request->validate([
             'nama_lengkap' => ['required', 'string', 'max:255'],
-            'nomor_telepon' => ['required', 'string', 'max:30'],
+            'email' => ['nullable', 'string', 'email', 'max:255', 'unique:users,email'],
             'username' => ['required', 'string', 'max:255', 'unique:users,username'],
-            'password' => ['required', 'string', 'min:8'],
+            'password' => ['required', 'string', 'min:8', 'confirmed'],
             'role' => ['required', Rule::in([
                 'customer',
                 'admin',
+                'superadmin',
             ])],
+            'status' => ['nullable', 'string'],
+            'must_change_password' => ['nullable'],
+            'nomor_telepon' => ['nullable', 'string', 'max:30'],
         ]);
+
+        $statusInput = $request->input('status', 'Aktif');
+        $isActive = ! in_array(strtolower((string) $statusInput), ['nonaktif', '0', 'inactive'], true);
+        $mustChangePassword = $request->boolean('must_change_password');
 
         $user = User::create([
             'nama_lengkap' => $validated['nama_lengkap'],
-            'nomor_telepon' => $validated['nomor_telepon'],
+            'email' => $validated['email'] ?? null,
             'username' => $validated['username'],
+            'nomor_telepon' => $validated['nomor_telepon'] ?? '-',
             'password_hash' => Hash::make($validated['password']),
             'role' => $validated['role'],
+            'is_active' => $isActive,
+            'must_change_password' => $mustChangePassword,
         ]);
 
-        return response()->json([
-            'message' => 'Pengguna berhasil dibuat.',
-            'data' => $user,
-        ], 201);
+        // Catat di Action Log
+        ActionLog::record(
+            $request->user(),
+            'Membuat akun',
+            'Akun',
+            "{$user->nama_lengkap} · ".ucfirst($user->role),
+            'Berhasil'
+        );
+
+        if ($request->wantsJson()) {
+            return response()->json([
+                'message' => 'Pengguna berhasil dibuat.',
+                'data' => $user,
+            ], 201);
+        }
+
+        return redirect()->route('superadmin.dashboard')
+            ->with('success', 'Akun '.$user->nama_lengkap.' berhasil dibuat.');
     }
 
     // Melihat detail pengguna
@@ -78,14 +111,22 @@ class SuperAdminUserController extends Controller
     // Memperbarui data pengguna
     public function update(Request $request, User $user)
     {
-        // Tidak boleh mengubah role akun SUPERADMIN melalui fitur ini.
-        if ($user->isSuperAdmin()) {
-            abort(403, 'Akun SUPERADMIN tidak dapat diubah melalui fitur ini.');
+        // Tidak boleh mengubah role akun SUPERADMIN melalui fitur ini jika bukan dirinya sendiri.
+        if ($user->isSuperAdmin() && $request->has('role') && $request->input('role') !== 'superadmin') {
+            abort(403, 'Role SUPERADMIN tidak dapat diubah menjadi role lain.');
         }
 
         $validated = $request->validate([
             'nama_lengkap' => ['sometimes', 'required', 'string', 'max:255'],
-            'nomor_telepon' => ['sometimes', 'required', 'string', 'max:30'],
+            'email' => [
+                'sometimes',
+                'nullable',
+                'string',
+                'email',
+                'max:255',
+                Rule::unique('users', 'email')->ignore($user->id_user, 'id_user'),
+            ],
+            'nomor_telepon' => ['sometimes', 'nullable', 'string', 'max:30'],
             'username' => [
                 'sometimes',
                 'required',
@@ -96,8 +137,9 @@ class SuperAdminUserController extends Controller
             'role' => [
                 'sometimes',
                 'required',
-                Rule::in(['customer', 'admin']),
+                Rule::in(['customer', 'admin', 'superadmin']),
             ],
+            'is_active' => ['sometimes', 'boolean'],
             'password' => ['sometimes', 'required', 'string', 'min:8'],
         ]);
 
@@ -110,6 +152,14 @@ class SuperAdminUserController extends Controller
         }
 
         $user->update($validated);
+
+        ActionLog::record(
+            $request->user(),
+            'Memperbarui akun',
+            'Akun',
+            "{$user->nama_lengkap} ({$user->username})",
+            'Berhasil'
+        );
 
         return response()->json([
             'message' => 'Pengguna berhasil diperbarui.',

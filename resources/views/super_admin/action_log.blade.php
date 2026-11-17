@@ -426,97 +426,109 @@
           <p>Telusuri aktivitas administrator untuk menjaga keamanan sistem.</p>
         </div>
 
-        <button type="button" class="btn-export-csv" title="Ekspor data log ke CSV" onclick="alert('Fitur ekspor CSV akan aktif setelah tabel Action Log diimplementasikan oleh tim backend.')">
+        <a href="{{ route('superadmin.action_log.export', request()->query()) }}" class="btn-export-csv" title="Ekspor data log ke CSV">
           <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
             <polyline points="7 10 12 15 17 10"/>
             <line x1="12" y1="15" x2="12" y2="3"/>
           </svg>
           <span>Ekspor CSV</span>
-        </button>
+        </a>
       </div>
 
       <!-- Filter Box -->
-      <section class="filter-card" aria-label="Filter action log">
-        <div class="filter-grid-top">
-          <div>
-            <label class="filter-label" for="filterSearch">Cari aktivitas</label>
-            <div class="search-input-wrap">
-              <input
-                type="text"
-                id="filterSearch"
-                class="search-input"
-                placeholder="Cari nama pengguna atau aktivitas..."
-              >
-              <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <circle cx="11" cy="11" r="8"/>
-                <line x1="21" y1="21" x2="16.65" y2="16.65"/>
-              </svg>
+      <form method="GET" action="{{ route('superadmin.action_log') }}" id="filterForm">
+        <section class="filter-card" aria-label="Filter action log">
+          <div class="filter-grid-top">
+            <div>
+              <label class="filter-label" for="filterSearch">Cari aktivitas</label>
+              <div class="search-input-wrap">
+                <input
+                  type="text"
+                  id="filterSearch"
+                  name="search"
+                  value="{{ $filters['search'] ?? '' }}"
+                  class="search-input"
+                  placeholder="Cari nama pengguna atau aktivitas..."
+                >
+                <button type="submit" style="display:none;" aria-hidden="true"></button>
+                <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <circle cx="11" cy="11" r="8"/>
+                  <line x1="21" y1="21" x2="16.65" y2="16.65"/>
+                </svg>
+              </div>
+            </div>
+
+            <div>
+              <label class="filter-label" for="filterDate">Rentang tanggal</label>
+              <div class="select-wrap">
+                <select id="filterDate" name="date" class="filter-select" onchange="this.form.submit()">
+                  <option value="all" {{ ($filters['date'] ?? '') === 'all' ? 'selected' : '' }}>Semua waktu</option>
+                  <option value="7" {{ ($filters['date'] ?? '') === '7' ? 'selected' : '' }}>7 hari terakhir</option>
+                  <option value="30" {{ ($filters['date'] ?? '') === '30' ? 'selected' : '' }}>30 hari terakhir</option>
+                </select>
+                <svg class="select-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
+              </div>
             </div>
           </div>
 
-          <div>
-            <label class="filter-label" for="filterDate">Rentang tanggal</label>
-            <div class="select-wrap">
-              <select id="filterDate" class="filter-select">
-                <option value="7">7 hari terakhir</option>
-                <option value="30">30 hari terakhir</option>
-                <option value="all">Semua waktu</option>
-              </select>
-              <svg class="select-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
+          <div class="filter-grid-bottom">
+            <div>
+              <label class="filter-label" for="filterUser">Pengguna</label>
+              <div class="select-wrap">
+                <select id="filterUser" name="user" class="filter-select" onchange="this.form.submit()">
+                  <option value="">Semua pengguna</option>
+                  @if (!empty($usersList))
+                    @foreach ($usersList as $u)
+                      <option value="{{ $u->nama_lengkap }}" {{ ($filters['user'] ?? '') == $u->nama_lengkap ? 'selected' : '' }}>
+                        {{ $u->nama_lengkap }} ({{ ucfirst($u->role) }})
+                      </option>
+                    @endforeach
+                  @endif
+                </select>
+                <svg class="select-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
+              </div>
+            </div>
+
+            <div>
+              <label class="filter-label" for="filterModule">Modul</label>
+              <div class="select-wrap">
+                <select id="filterModule" name="modul" class="filter-select" onchange="this.form.submit()">
+                  <option value="">Semua modul</option>
+                  <option value="Akun" {{ ($filters['modul'] ?? '') === 'Akun' ? 'selected' : '' }}>Akun</option>
+                  <option value="Produk" {{ ($filters['modul'] ?? '') === 'Produk' ? 'selected' : '' }}>Produk</option>
+                  <option value="Autentikasi" {{ ($filters['modul'] ?? '') === 'Autentikasi' ? 'selected' : '' }}>Autentikasi</option>
+                  <option value="Pesanan" {{ ($filters['modul'] ?? '') === 'Pesanan' ? 'selected' : '' }}>Pesanan</option>
+                </select>
+                <svg class="select-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
+              </div>
+            </div>
+
+            <div>
+              <label class="filter-label" for="filterStatus">Status</label>
+              <div class="select-wrap">
+                <select id="filterStatus" name="status" class="filter-select" onchange="this.form.submit()">
+                  <option value="">Semua status</option>
+                  <option value="success" {{ ($filters['status'] ?? '') === 'success' ? 'selected' : '' }}>Berhasil</option>
+                  <option value="failed" {{ ($filters['status'] ?? '') === 'failed' ? 'selected' : '' }}>Gagal</option>
+                </select>
+                <svg class="select-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
+              </div>
+            </div>
+
+            <div>
+              <a href="{{ route('superadmin.action_log') }}" class="btn-reset-filter" style="display:inline-flex; align-items:center; justify-content:center; text-decoration:none;">Reset filter</a>
             </div>
           </div>
-        </div>
-
-        <div class="filter-grid-bottom">
-          <div>
-            <label class="filter-label" for="filterUser">Pengguna</label>
-            <div class="select-wrap">
-              <select id="filterUser" class="filter-select">
-                <option value="">Semua pengguna</option>
-              </select>
-              <svg class="select-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
-            </div>
-          </div>
-
-          <div>
-            <label class="filter-label" for="filterModule">Modul</label>
-            <div class="select-wrap">
-              <select id="filterModule" class="filter-select">
-                <option value="">Semua modul</option>
-                <option value="Akun">Akun</option>
-                <option value="Produk">Produk</option>
-                <option value="Autentikasi">Autentikasi</option>
-                <option value="Pesanan">Pesanan</option>
-              </select>
-              <svg class="select-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
-            </div>
-          </div>
-
-          <div>
-            <label class="filter-label" for="filterStatus">Status</label>
-            <div class="select-wrap">
-              <select id="filterStatus" class="filter-select">
-                <option value="">Semua status</option>
-                <option value="success">Berhasil</option>
-                <option value="failed">Gagal</option>
-              </select>
-              <svg class="select-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
-            </div>
-          </div>
-
-          <div>
-            <button type="button" class="btn-reset-filter" onclick="resetActionLogFilters()">Reset filter</button>
-          </div>
-        </div>
-      </section>
+        </section>
+      </form>
 
       <!-- Main Action Log Table Card -->
       <section class="main-table-card" aria-label="Riwayat aktivitas">
         <div class="table-head-row">
           <div>
             <h2 class="table-title">Riwayat aktivitas</h2>
-            <p class="table-subtitle">{{ isset($logs) && is_countable($logs) ? count($logs) : 0 }} aktivitas</p>
+            <p class="table-subtitle">{{ isset($logs) ? $logs->total() : 0 }} aktivitas</p>
           </div>
           <span class="timezone-label">Waktu ditampilkan dalam WIB</span>
         </div>
@@ -535,20 +547,29 @@
               </tr>
             </thead>
             <tbody>
-              @if (!empty($logs) && count($logs) > 0)
+              @if (!empty($logs) && $logs->count() > 0)
                 @foreach ($logs as $log)
                   <tr>
-                    <td>{{ $log->created_at ?? '-' }}</td>
+                    <td>
+                      {{ $log->created_at ? $log->created_at->format('d M Y') : '-' }}
+                      <br>
+                      <small style="color: var(--text-sub); font-size: 11px;">{{ $log->created_at ? $log->created_at->format('H.i.s') : '' }}</small>
+                    </td>
                     <td>
                       <strong>{{ $log->user_name ?? '-' }}</strong>
                       <div style="font-size: 11px; color: var(--text-sub);">{{ $log->user_role ?? '-' }}</div>
                     </td>
-                    <td>{{ $log->description ?? '-' }}</td>
-                    <td>{{ $log->module ?? '-' }}</td>
+                    <td>
+                      <span style="font-weight: 600;">{{ $log->aktivitas ?? '-' }}</span>
+                      @if (!empty($log->detail))
+                        <div style="font-size: 11.5px; color: var(--text-muted); margin-top: 2px;">{{ $log->detail }}</div>
+                      @endif
+                    </td>
+                    <td>{{ $log->modul ?? '-' }}</td>
                     <td>{{ $log->ip_address ?? '-' }}</td>
                     <td>
-                      <span class="badge-status-pill {{ ($log->status ?? '') === 'success' ? 'badge-success' : 'badge-danger' }}">
-                        {{ ($log->status ?? '') === 'success' ? 'Berhasil' : 'Gagal' }}
+                      <span class="badge-status-pill {{ ($log->status ?? '') === 'Berhasil' ? 'badge-success' : 'badge-danger' }}">
+                        {{ $log->status ?? 'Berhasil' }}
                       </span>
                     </td>
                     <td>
@@ -566,7 +587,7 @@
                       </svg>
                       <div class="empty-state-title">Belum ada aktivitas tercatat</div>
                       <div class="empty-state-desc">
-                        Modul pencatatan log aktivitas administrator memerlukan migrasi database dan model ActionLog dari tim backend. Halaman ini sudah siap merender data begitu endpoint tersedia.
+                        Aktivitas administrator yang tercatat oleh sistem akan tampil secara otomatis pada riwayat ini.
                       </div>
                     </div>
                   </td>
@@ -577,12 +598,31 @@
         </div>
 
         <div class="pagination-bar">
-          <span>Menampilkan 0 dari 0 aktivitas</span>
-          <div class="pagination-btns">
-            <button class="page-btn" disabled>&lt;</button>
-            <button class="page-btn active">1</button>
-            <button class="page-btn" disabled>&gt;</button>
-          </div>
+          @if (!empty($logs) && $logs->total() > 0)
+            <span>Menampilkan {{ $logs->firstItem() }}–{{ $logs->lastItem() }} dari {{ $logs->total() }} aktivitas</span>
+            <div class="pagination-btns">
+              @if ($logs->onFirstPage())
+                <button class="page-btn" disabled>&lt;</button>
+              @else
+                <a href="{{ $logs->previousPageUrl() }}" class="page-btn">&lt;</a>
+              @endif
+
+              <span class="page-btn active">{{ $logs->currentPage() }}</span>
+
+              @if ($logs->hasMorePages())
+                <a href="{{ $logs->nextPageUrl() }}" class="page-btn">&gt;</a>
+              @else
+                <button class="page-btn" disabled>&gt;</button>
+              @endif
+            </div>
+          @else
+            <span>Menampilkan 0 dari 0 aktivitas</span>
+            <div class="pagination-btns">
+              <button class="page-btn" disabled>&lt;</button>
+              <button class="page-btn active">1</button>
+              <button class="page-btn" disabled>&gt;</button>
+            </div>
+          @endif
         </div>
       </section>
 

@@ -12,6 +12,7 @@ use App\Http\Controllers\Admin\UserController as AdminUserController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\LoginController;
 use App\Http\Controllers\OrderHistoryController;
+use App\Http\Controllers\SuperAdmin\SuperAdminActionLogController;
 use App\Http\Controllers\SuperAdmin\SuperAdminDashboardController;
 use App\Http\Controllers\SuperAdmin\SuperAdminTransactionController;
 use App\Http\Controllers\SuperAdmin\SuperAdminUserController;
@@ -320,6 +321,16 @@ Route::middleware(['auth', 'superadmin'])
 
         // Manajemen pengguna
         Route::get(
+            '/buat-akun',
+            [SuperAdminUserController::class, 'create']
+        )->name('buat_akun');
+
+        Route::get(
+            '/users/create',
+            [SuperAdminUserController::class, 'create']
+        )->name('users.create');
+
+        Route::get(
             '/users',
             [SuperAdminUserController::class, 'index']
         )->name('users.index');
@@ -338,6 +349,17 @@ Route::middleware(['auth', 'superadmin'])
             '/users/{user}',
             [SuperAdminUserController::class, 'update']
         )->name('users.update');
+
+        // Action log
+        Route::get(
+            '/action-log',
+            [SuperAdminActionLogController::class, 'index']
+        )->name('action_log');
+
+        Route::get(
+            '/action-logs/export',
+            [SuperAdminActionLogController::class, 'exportCsv']
+        )->name('action_log.export');
 
         // Monitoring transaksi
         Route::get(

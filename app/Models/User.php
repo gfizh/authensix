@@ -17,8 +17,11 @@ class User extends Authenticatable
         'nama_lengkap',
         'nomor_telepon',
         'username',
+        'email',
         'password_hash',
         'role',
+        'is_active',
+        'must_change_password',
     ];
 
     protected $hidden = [
@@ -28,6 +31,8 @@ class User extends Authenticatable
     protected function casts(): array
     {
         return [
+            'is_active' => 'boolean',
+            'must_change_password' => 'boolean',
             'created_at' => 'datetime',
             'updated_at' => 'datetime',
         ];

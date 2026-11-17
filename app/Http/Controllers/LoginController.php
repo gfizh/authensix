@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\ActionLog;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -16,6 +17,8 @@ class LoginController extends Controller
         ]);
 
         if (! Auth::attempt($credentials)) {
+            ActionLog::record(null, 'Percobaan masuk ditolak', 'Autentikasi', "Username: {$request->input('username')}", 'Gagal');
+
             return back()
                 ->withErrors([
                     'username' => 'Username atau password salah.',
@@ -26,11 +29,16 @@ class LoginController extends Controller
         $request->session()->regenerate();
         $request->session()->forget('url.intended');
 
-        if ($request->user()->isSuperAdmin()) {
+        $user = $request->user();
+        if ($user->isSuperAdmin() || $user->isAdmin()) {
+            ActionLog::record($user, 'Masuk ke sistem', 'Autentikasi', 'Sesi baru dimulai', 'Berhasil');
+        }
+
+        if ($user->isSuperAdmin()) {
             return redirect()->route('superadmin.dashboard');
         }
 
-        if ($request->user()->isAdmin()) {
+        if ($user->isAdmin()) {
             return redirect()->route('admin.dashboard-admin');
         }
 
@@ -39,6 +47,11 @@ class LoginController extends Controller
 
     public function destroy(Request $request): RedirectResponse
     {
+        $user = $request->user();
+        if ($user && ($user->isSuperAdmin() || $user->isAdmin())) {
+            ActionLog::record($user, 'Keluar dari sistem', 'Autentikasi', 'Sesi diakhiri', 'Berhasil');
+        }
+
         Auth::logout();
 
         $request->session()->invalidate();

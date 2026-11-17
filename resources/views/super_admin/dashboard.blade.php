@@ -613,25 +613,31 @@
         <div class="stat-card">
           <div class="stat-label">Total akun</div>
           <div class="stat-value" id="statTotalUsers">{{ $users['total'] ?? '-' }}</div>
-          <div class="stat-subtext">Total terdaftar di sistem</div>
+          <div class="stat-subtext">{{ ($users['new_this_week'] ?? 0) }} akun baru minggu ini</div>
         </div>
 
         <div class="stat-card">
           <div class="stat-label">Akun aktif</div>
           <div class="stat-value" id="statActiveUsers">{{ $users['active'] ?? '-' }}</div>
-          <div class="stat-subtext" title="Menunggu field status aktif di database users">Akses pengguna aktif</div>
+          <div class="stat-subtext">
+            @if (!empty($users['total']) && $users['total'] > 0)
+              {{ round((($users['active'] ?? 0) / $users['total']) * 100, 1) }}% dari total akun
+            @else
+              Akses pengguna aktif
+            @endif
+          </div>
         </div>
 
         <div class="stat-card">
           <div class="stat-label">Akun nonaktif</div>
-          <div class="stat-value" id="statInactiveUsers">{{ $users['inactive'] ?? '-' }}</div>
+          <div class="stat-value" id="statInactiveUsers">{{ $users['inactive'] ?? '0' }}</div>
           <div class="stat-subtext">Akses masuk dibatasi</div>
         </div>
 
         <div class="stat-card">
           <div class="stat-label">Aktivitas hari ini</div>
-          <div class="stat-value" id="statTodayActivities">{{ $activities['today'] ?? '-' }}</div>
-          <div class="stat-subtext" title="Menunggu modul Action Log dari tim backend">Log tercatat hari ini</div>
+          <div class="stat-value" id="statTodayActivities">{{ $activities['today'] ?? '0' }}</div>
+          <div class="stat-subtext">{{ $activities['today_success'] ?? 0 }} berhasil &middot; {{ $activities['today_failed'] ?? 0 }} gagal</div>
         </div>
       </section>
 
@@ -644,43 +650,22 @@
           </div>
 
           <div class="activity-chart" aria-label="Grafik aktivitas mingguan">
-            <div class="chart-bar-group">
-              <span class="chart-bar-val">-</span>
-              <div class="chart-bar" style="height: 45%;"></div>
-              <span class="chart-day">Sel</span>
-            </div>
-            <div class="chart-bar-group">
-              <span class="chart-bar-val">-</span>
-              <div class="chart-bar" style="height: 65%;"></div>
-              <span class="chart-day">Rab</span>
-            </div>
-            <div class="chart-bar-group">
-              <span class="chart-bar-val">-</span>
-              <div class="chart-bar" style="height: 40%;"></div>
-              <span class="chart-day">Kam</span>
-            </div>
-            <div class="chart-bar-group">
-              <span class="chart-bar-val">-</span>
-              <div class="chart-bar" style="height: 75%;"></div>
-              <span class="chart-day">Jum</span>
-            </div>
-            <div class="chart-bar-group">
-              <span class="chart-bar-val">-</span>
-              <div class="chart-bar" style="height: 70%;"></div>
-              <span class="chart-day">Sab</span>
-            </div>
-            <div class="chart-bar-group">
-              <span class="chart-bar-val">-</span>
-              <div class="chart-bar" style="height: 55%;"></div>
-              <span class="chart-day">Min</span>
-            </div>
-            <div class="chart-bar-group">
-              <span class="chart-bar-val">-</span>
-              <div class="chart-bar current" style="height: 85%;"></div>
-              <span class="chart-day">Sen</span>
-            </div>
+            @if (!empty($weeklyActivities) && count($weeklyActivities) > 0)
+              @foreach ($weeklyActivities as $day)
+                <div class="chart-bar-group">
+                  <span class="chart-bar-val">{{ $day['count'] > 0 ? $day['count'] : '-' }}</span>
+                  <div class="chart-bar {{ !empty($day['is_today']) ? 'current' : '' }}" style="height: {{ $day['height'] }}%;"></div>
+                  <span class="chart-day">{{ $day['day'] }}</span>
+                </div>
+              @endforeach
+            @else
+              <div class="chart-bar-group">
+                <span class="chart-bar-val">-</span>
+                <div class="chart-bar" style="height: 20%;"></div>
+                <span class="chart-day">Hari</span>
+              </div>
+            @endif
           </div>
-          <p class="chart-notice">Grafik akan menampilkan data real setelah tabel Action Log diimplementasikan oleh tim backend.</p>
         </div>
 
         <div class="dashboard-card">
@@ -690,13 +675,19 @@
           </div>
 
           <div class="roles-list">
+            @php
+              $totalUsers = max(1, $users['total'] ?? 1);
+              $pctSuper = round((($users['superadmin'] ?? 0) / $totalUsers) * 100);
+              $pctAdmin = round((($users['admin'] ?? 0) / $totalUsers) * 100);
+              $pctCust = round((($users['customer'] ?? 0) / $totalUsers) * 100);
+            @endphp
             <div class="role-row">
               <div class="role-row-head">
                 <span class="role-row-title">Super admin</span>
                 <span class="role-row-count" id="roleSuperadminCount">{{ isset($users['superadmin']) ? $users['superadmin'].' akun' : '-' }}</span>
               </div>
               <div class="role-progress-track">
-                <div class="role-progress-fill fill-superadmin"></div>
+                <div class="role-progress-fill fill-superadmin" style="width: {{ $pctSuper }}%;"></div>
               </div>
             </div>
 
@@ -706,7 +697,7 @@
                 <span class="role-row-count" id="roleAdminCount">{{ isset($users['admin']) ? $users['admin'].' akun' : '-' }}</span>
               </div>
               <div class="role-progress-track">
-                <div class="role-progress-fill fill-admin"></div>
+                <div class="role-progress-fill fill-admin" style="width: {{ $pctAdmin }}%;"></div>
               </div>
             </div>
 
@@ -716,7 +707,7 @@
                 <span class="role-row-count" id="roleCustomerCount">{{ isset($users['customer']) ? $users['customer'].' akun' : '-' }}</span>
               </div>
               <div class="role-progress-track">
-                <div class="role-progress-fill fill-customer"></div>
+                <div class="role-progress-fill fill-customer" style="width: {{ $pctCust }}%;"></div>
               </div>
             </div>
           </div>
@@ -754,13 +745,23 @@
               @if (!empty($recentActivities) && count($recentActivities) > 0)
                 @foreach ($recentActivities as $act)
                   <tr>
-                    <td>{{ $act->created_at ?? '-' }}</td>
-                    <td><strong>{{ $act->user_name ?? '-' }}</strong></td>
-                    <td>{{ $act->activity ?? '-' }}</td>
-                    <td>{{ $act->module ?? '-' }}</td>
+                    <td>{{ $act->created_at ? $act->created_at->format('d M, H.i') : '-' }}</td>
                     <td>
-                      <span class="badge-status-pill {{ ($act->status ?? '') === 'success' ? 'badge-success' : 'badge-danger' }}">
-                        {{ ($act->status ?? '') === 'success' ? 'Berhasil' : 'Gagal' }}
+                      <strong>{{ $act->user_name ?? '-' }}</strong>
+                      @if (!empty($act->user_role))
+                        <div style="font-size: 11px; color: var(--text-sub);">{{ $act->user_role }}</div>
+                      @endif
+                    </td>
+                    <td>
+                      <span style="font-weight: 600;">{{ $act->aktivitas ?? '-' }}</span>
+                      @if (!empty($act->detail))
+                        <div style="font-size: 11.5px; color: var(--text-muted); margin-top: 2px;">{{ $act->detail }}</div>
+                      @endif
+                    </td>
+                    <td>{{ $act->modul ?? '-' }}</td>
+                    <td>
+                      <span class="badge-status-pill {{ ($act->status ?? '') === 'Berhasil' ? 'badge-success' : 'badge-danger' }}">
+                        {{ $act->status ?? 'Berhasil' }}
                       </span>
                     </td>
                   </tr>

@@ -22,8 +22,11 @@ class DemoSeeder extends Seeder
                 'nama_lengkap' => 'Ahmad Hafizh',
                 'nomor_telepon' => '081234567890',
                 'username' => 'ahmad',
+                'email' => 'ahmad@example.com',
                 'password_hash' => Hash::make('password'),
                 'role' => 'customer',
+                'is_active' => true,
+                'must_change_password' => false,
                 'created_at' => now(),
                 'updated_at' => now(),
             ],
@@ -32,8 +35,11 @@ class DemoSeeder extends Seeder
                 'nama_lengkap' => 'Budi Santoso',
                 'nomor_telepon' => '081298765432',
                 'username' => 'budi',
+                'email' => 'budi@example.com',
                 'password_hash' => Hash::make('password'),
                 'role' => 'customer',
+                'is_active' => true,
+                'must_change_password' => false,
                 'created_at' => now(),
                 'updated_at' => now(),
             ],
@@ -42,13 +48,28 @@ class DemoSeeder extends Seeder
                 'nama_lengkap' => 'Admin Store',
                 'nomor_telepon' => '081111111111',
                 'username' => 'admin',
+                'email' => 'admin@authensix.com',
                 'password_hash' => Hash::make('admin123'),
                 'role' => 'admin',
+                'is_active' => true,
+                'must_change_password' => false,
+                'created_at' => now(),
+                'updated_at' => now(),
+            ],
+            [
+                'id_user' => 4,
+                'nama_lengkap' => 'GURUH',
+                'nomor_telepon' => '081234567800',
+                'username' => 'guruhhhh',
+                'email' => 'guruh@authensix.com',
+                'password_hash' => Hash::make('superadmin123'),
+                'role' => 'superadmin',
+                'is_active' => true,
+                'must_change_password' => false,
                 'created_at' => now(),
                 'updated_at' => now(),
             ],
         ]);
-
 
         /*
         |--------------------------------------------------------------------------
@@ -95,7 +116,6 @@ class DemoSeeder extends Seeder
             ],
         ]);
 
-
         /*
         |--------------------------------------------------------------------------
         | MEREK
@@ -134,7 +154,6 @@ class DemoSeeder extends Seeder
                 'logo_url' => 'https://example.com/logo/asus.png',
             ],
         ]);
-
 
         /*
         |--------------------------------------------------------------------------
@@ -181,130 +200,128 @@ class DemoSeeder extends Seeder
             ],
         ]);
 
-
         /*
         |--------------------------------------------------------------------------
         | PRODUK
         |--------------------------------------------------------------------------
         */
 
-    DB::table('produk')->insert([
-    [
-        'id_produk' => 1,
-        'id_kategori' => 1,
-        'id_merek' => 1,
-        'sku' => 'AMD-R5-5600',
-        'nama_produk' => 'AMD Ryzen 5 5600',
-        'tipe_produk' => 'regular',
-        'harga' => 1650000,
-        'stok' => 20,
-        'jumlah_terjual' => 35,
-        'kondisi' => 'baru',
-        'masa_garansi_bulan' => 36,
-        'deskripsi' => 'Processor AMD Ryzen 5 5600 untuk gaming dan produktivitas.',
-        'gambar_path' => 'products/ryzen5.webp',
-        'rating_rata_rata' => 4.80,
-        'is_active' => true,
-        'created_at' => now(),
-        'updated_at' => now(),
-    ],
-    [
-        'id_produk' => 2,
-        'id_kategori' => 2,
-        'id_merek' => 3,
-        'sku' => 'NV-RTX-4060',
-        'nama_produk' => 'NVIDIA GeForce RTX 4060',
-        'tipe_produk' => 'regular',
-        'harga' => 4800000,
-        'stok' => 10,
-        'jumlah_terjual' => 21,
-        'kondisi' => 'baru',
-        'masa_garansi_bulan' => 36,
-        'deskripsi' => 'Kartu grafis NVIDIA untuk gaming dan content creation.',
-        'gambar_path' => 'products/rtx4060.jpg',
-        'rating_rata_rata' => 4.70,
-        'is_active' => true,
-        'created_at' => now(),
-        'updated_at' => now(),
-    ],
-    [
-        'id_produk' => 3,
-        'id_kategori' => 3,
-        'id_merek' => 4,
-        'sku' => 'KNG-16GB-DDR4',
-        'nama_produk' => 'Kingston Fury 16GB DDR4',
-        'tipe_produk' => 'regular',
-        'harga' => 650000,
-        'stok' => 30,
-        'jumlah_terjual' => 50,
-        'kondisi' => 'baru',
-        'masa_garansi_bulan' => 12,
-        'deskripsi' => 'RAM DDR4 16GB untuk desktop.',
-        'gambar_path' => 'products/kingstonFury.jpg',
-        'rating_rata_rata' => 4.60,
-        'is_active' => true,
-        'created_at' => now(),
-        'updated_at' => now(),
-    ],
-    [
-        'id_produk' => 4,
-        'id_kategori' => 4,
-        'id_merek' => 5,
-        'sku' => 'SMS-980-1TB',
-        'nama_produk' => 'Samsung SSD 980 1TB',
-        'tipe_produk' => 'regular',
-        'harga' => 1100000,
-        'stok' => 15,
-        'jumlah_terjual' => 28,
-        'kondisi' => 'baru',
-        'masa_garansi_bulan' => 60,
-        'deskripsi' => 'SSD NVMe M.2 kapasitas 1TB.',
-        'gambar_path' => 'products/samsungssd1tb.jpg',
-        'rating_rata_rata' => 4.90,
-        'is_active' => true,
-        'created_at' => now(),
-        'updated_at' => now(),
-    ],
-    [
-        'id_produk' => 5,
-        'id_kategori' => 5,
-        'id_merek' => 6,
-        'sku' => 'ASUS-B550M',
-        'nama_produk' => 'ASUS Prime B550M-A',
-        'tipe_produk' => 'regular',
-        'harga' => 1850000,
-        'stok' => 12,
-        'jumlah_terjual' => 18,
-        'kondisi' => 'baru',
-        'masa_garansi_bulan' => 36,
-        'deskripsi' => 'Motherboard AM4 chipset B550.',
-        'gambar_path' => 'products/moboasus.jpg',
-        'rating_rata_rata' => 4.70,
-        'is_active' => true,
-        'created_at' => now(),
-        'updated_at' => now(),
-    ],
-    [
-        'id_produk' => 6,
-        'id_kategori' => 6,
-        'id_merek' => 6,
-        'sku' => 'PC-GAMING-001',
-        'nama_produk' => 'Gaming PC Ryzen 5 RTX 4060',
-        'tipe_produk' => 'prebuild',
-        'harga' => 12500000,
-        'stok' => 5,
-        'jumlah_terjual' => 8,
-        'kondisi' => 'baru',
-        'masa_garansi_bulan' => 12,
-        'deskripsi' => 'PC gaming prebuild dengan Ryzen 5 dan RTX 4060.',
-        'gambar_path' => 'products/gaming-pc.jpg',
-        'rating_rata_rata' => 4.90,
-        'is_active' => true,
-        'created_at' => now(),
-        'updated_at' => now(),
-    ],
-]);
-
+        DB::table('produk')->insert([
+            [
+                'id_produk' => 1,
+                'id_kategori' => 1,
+                'id_merek' => 1,
+                'sku' => 'AMD-R5-5600',
+                'nama_produk' => 'AMD Ryzen 5 5600',
+                'tipe_produk' => 'regular',
+                'harga' => 1650000,
+                'stok' => 20,
+                'jumlah_terjual' => 35,
+                'kondisi' => 'baru',
+                'masa_garansi_bulan' => 36,
+                'deskripsi' => 'Processor AMD Ryzen 5 5600 untuk gaming dan produktivitas.',
+                'gambar_path' => 'products/ryzen5.webp',
+                'rating_rata_rata' => 4.80,
+                'is_active' => true,
+                'created_at' => now(),
+                'updated_at' => now(),
+            ],
+            [
+                'id_produk' => 2,
+                'id_kategori' => 2,
+                'id_merek' => 3,
+                'sku' => 'NV-RTX-4060',
+                'nama_produk' => 'NVIDIA GeForce RTX 4060',
+                'tipe_produk' => 'regular',
+                'harga' => 4800000,
+                'stok' => 10,
+                'jumlah_terjual' => 21,
+                'kondisi' => 'baru',
+                'masa_garansi_bulan' => 36,
+                'deskripsi' => 'Kartu grafis NVIDIA untuk gaming dan content creation.',
+                'gambar_path' => 'products/rtx4060.jpg',
+                'rating_rata_rata' => 4.70,
+                'is_active' => true,
+                'created_at' => now(),
+                'updated_at' => now(),
+            ],
+            [
+                'id_produk' => 3,
+                'id_kategori' => 3,
+                'id_merek' => 4,
+                'sku' => 'KNG-16GB-DDR4',
+                'nama_produk' => 'Kingston Fury 16GB DDR4',
+                'tipe_produk' => 'regular',
+                'harga' => 650000,
+                'stok' => 30,
+                'jumlah_terjual' => 50,
+                'kondisi' => 'baru',
+                'masa_garansi_bulan' => 12,
+                'deskripsi' => 'RAM DDR4 16GB untuk desktop.',
+                'gambar_path' => 'products/kingstonFury.jpg',
+                'rating_rata_rata' => 4.60,
+                'is_active' => true,
+                'created_at' => now(),
+                'updated_at' => now(),
+            ],
+            [
+                'id_produk' => 4,
+                'id_kategori' => 4,
+                'id_merek' => 5,
+                'sku' => 'SMS-980-1TB',
+                'nama_produk' => 'Samsung SSD 980 1TB',
+                'tipe_produk' => 'regular',
+                'harga' => 1100000,
+                'stok' => 15,
+                'jumlah_terjual' => 28,
+                'kondisi' => 'baru',
+                'masa_garansi_bulan' => 60,
+                'deskripsi' => 'SSD NVMe M.2 kapasitas 1TB.',
+                'gambar_path' => 'products/samsungssd1tb.jpg',
+                'rating_rata_rata' => 4.90,
+                'is_active' => true,
+                'created_at' => now(),
+                'updated_at' => now(),
+            ],
+            [
+                'id_produk' => 5,
+                'id_kategori' => 5,
+                'id_merek' => 6,
+                'sku' => 'ASUS-B550M',
+                'nama_produk' => 'ASUS Prime B550M-A',
+                'tipe_produk' => 'regular',
+                'harga' => 1850000,
+                'stok' => 12,
+                'jumlah_terjual' => 18,
+                'kondisi' => 'baru',
+                'masa_garansi_bulan' => 36,
+                'deskripsi' => 'Motherboard AM4 chipset B550.',
+                'gambar_path' => 'products/moboasus.jpg',
+                'rating_rata_rata' => 4.70,
+                'is_active' => true,
+                'created_at' => now(),
+                'updated_at' => now(),
+            ],
+            [
+                'id_produk' => 6,
+                'id_kategori' => 6,
+                'id_merek' => 6,
+                'sku' => 'PC-GAMING-001',
+                'nama_produk' => 'Gaming PC Ryzen 5 RTX 4060',
+                'tipe_produk' => 'prebuild',
+                'harga' => 12500000,
+                'stok' => 5,
+                'jumlah_terjual' => 8,
+                'kondisi' => 'baru',
+                'masa_garansi_bulan' => 12,
+                'deskripsi' => 'PC gaming prebuild dengan Ryzen 5 dan RTX 4060.',
+                'gambar_path' => 'products/gaming-pc.jpg',
+                'rating_rata_rata' => 4.90,
+                'is_active' => true,
+                'created_at' => now(),
+                'updated_at' => now(),
+            ],
+        ]);
 
         /*
         |--------------------------------------------------------------------------
@@ -351,7 +368,6 @@ class DemoSeeder extends Seeder
             ],
         ]);
 
-
         /*
         |--------------------------------------------------------------------------
         | KERANJANG
@@ -372,7 +388,6 @@ class DemoSeeder extends Seeder
                 'updated_at' => now(),
             ],
         ]);
-
 
         /*
         |--------------------------------------------------------------------------
@@ -403,7 +418,6 @@ class DemoSeeder extends Seeder
                 'harga_satuan' => 1650000,
             ],
         ]);
-
 
         /*
         |--------------------------------------------------------------------------
@@ -438,7 +452,6 @@ class DemoSeeder extends Seeder
             ],
         ]);
 
-
         /*
         |--------------------------------------------------------------------------
         | ITEM PESANAN
@@ -472,7 +485,6 @@ class DemoSeeder extends Seeder
             ],
         ]);
 
-
         /*
         |--------------------------------------------------------------------------
         | PEMBAYARAN
@@ -502,7 +514,6 @@ class DemoSeeder extends Seeder
             ],
         ]);
 
-
         /*
         |--------------------------------------------------------------------------
         | INVOICE
@@ -525,7 +536,6 @@ class DemoSeeder extends Seeder
                 'tanggal_terbit' => '2026-10-02 15:00:00',
             ],
         ]);
-
 
         /*
         |--------------------------------------------------------------------------
@@ -555,7 +565,6 @@ class DemoSeeder extends Seeder
                 'tanggal_diterima' => null,
             ],
         ]);
-
 
         /*
         |--------------------------------------------------------------------------
@@ -589,7 +598,6 @@ class DemoSeeder extends Seeder
                 'created_at' => '2026-10-05 11:00:00',
             ],
         ]);
-
 
         /*
         |--------------------------------------------------------------------------
