@@ -106,6 +106,10 @@
                             <span class="demo-account-badge admin">Admin</span>
                             <span class="demo-account-name">Admin Store</span>
                         </button>
+                        <button type="button" class="demo-account-pill" data-demo-user="guruhhhh" data-demo-pass="superadmin123" title="Klik untuk mengisi akun Super Admin (GURUHHHH)">
+                            <span class="demo-account-badge superadmin">Super Admin</span>
+                            <span class="demo-account-name">GURUHHHH</span>
+                        </button>
                         <button type="button" class="demo-account-pill" data-demo-user="budi" data-demo-pass="password" title="Klik untuk mengisi akun Budi Santoso">
                             <span class="demo-account-badge customer">Customer</span>
                             <span class="demo-account-name">Budi Santoso</span>

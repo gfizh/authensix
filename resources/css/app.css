@@ -314,6 +314,11 @@ body.login-page {
     color: #7e22ce;
 }
 
+.demo-account-badge.superadmin {
+    background: #fef3c7;
+    color: #b45309;
+}
+
 .demo-account-name {
     font-weight: 600;
 }
