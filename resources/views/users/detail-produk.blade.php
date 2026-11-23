@@ -3,6 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="csrf-token" content="{{ csrf_token() }}">
   <title>Detail Produk - AuthenSIX Computer</title>
   <style>
     :root {
@@ -147,7 +148,11 @@
       font-size: 13px;
     }
     .action-button.primary { border-color: #1687d2; color: #fff; background: var(--blue); font-weight: 700; }
+    .action-button:disabled { opacity: .5; cursor: not-allowed; }
     .notice { margin: 10px 0 0; color: var(--muted); font-size: 11px; line-height: 1.4; }
+    .notice.success { color: #15803d; }
+    .notice.error { color: #b42318; }
+    .notice a { color: var(--accent); font-weight: 600; text-decoration: underline; }
     .state-message { padding: 32px 0; color: var(--muted); text-align: center; }
     .state-message.error { color: #b42318; }
     [hidden] { display: none !important; }
@@ -243,8 +248,9 @@
     const productId = @json($id);
     const endpoint = @json(url('/api/products/'.$id));
     const checkoutUrl = @json(route('checkout'));
-    const cartEndpoint = @json(url('/api/cart/items'));
-    const csrfEndpoint = @json(url('/sanctum/csrf-cookie'));
+    const cartEndpoint = @json(route('cart.store'));
+    const cartIndexUrl = @json(route('cart.index'));
+    const csrfToken = document.querySelector('meta[name="csrf-token"]')?.content || "";
     const loadingMessage = document.getElementById("loading-message");
     const errorMessage = document.getElementById("error-message");
     const productContent = document.getElementById("product-content");
@@ -344,6 +350,18 @@
 
       renderSpecifications(Array.isArray(product.spesifikasi) ? product.spesifikasi : []);
       updateSubtotal(price, stock);
+
+      const cartBtn = document.querySelector('.purchase-actions button[data-action="cart"]');
+      const buyBtn = document.querySelector('.purchase-actions button[data-action="buy"]');
+      if (cartBtn) cartBtn.disabled = stock <= 0;
+      if (buyBtn) buyBtn.disabled = stock <= 0;
+      if (stock <= 0) {
+        const notice = document.getElementById("action-notice");
+        notice.className = "notice error";
+        notice.textContent = "Stok produk sedang habis.";
+        notice.hidden = false;
+      }
+
       loadingMessage.hidden = true;
       productContent.hidden = false;
     };
@@ -400,37 +418,43 @@
           return;
         }
 
+        notice.className = "notice";
         notice.textContent = "Menambahkan produk ke keranjang...";
         notice.hidden = false;
         button.disabled = true;
 
         try {
-          const csrfResponse = await fetch(csrfEndpoint, { credentials: "same-origin" });
-          if (!csrfResponse.ok) throw new Error("Sesi keamanan tidak tersedia.");
-          const xsrfCookie = document.cookie
-            .split("; ")
-            .find(cookie => cookie.startsWith("XSRF-TOKEN="));
-          if (!xsrfCookie) throw new Error("Sesi keamanan tidak tersedia.");
-
           const response = await fetch(cartEndpoint, {
             method: "POST",
             credentials: "same-origin",
             headers: {
               Accept: "application/json",
               "Content-Type": "application/json",
-              "X-XSRF-TOKEN": decodeURIComponent(xsrfCookie.slice("XSRF-TOKEN=".length))
+              "X-CSRF-TOKEN": csrfToken
             },
-            body: JSON.stringify({ id_produk: productId, jumlah: quantity })
+            body: JSON.stringify({ id_produk: Number(productId), jumlah: quantity })
           });
           const result = await response.json();
           if (!response.ok || !result.success) {
             throw new Error(result.message || "Produk gagal ditambahkan ke keranjang.");
           }
-          notice.textContent = "Produk berhasil ditambahkan ke keranjang.";
+          notice.className = "notice success";
+          notice.replaceChildren(document.createTextNode("Produk berhasil ditambahkan ke keranjang. "));
+          const cartLink = makeElement("a", "", "Lihat Keranjang");
+          cartLink.href = cartIndexUrl;
+          notice.append(cartLink);
+
+          const navBadge = document.getElementById("nav-cart-badge");
+          if (navBadge && result.cart_count !== undefined) {
+            navBadge.textContent = result.cart_count;
+            navBadge.hidden = Number(result.cart_count) <= 0;
+          }
         } catch (error) {
+          notice.className = "notice error";
           notice.textContent = error.message || "Produk gagal ditambahkan ke keranjang.";
         } finally {
-          button.disabled = false;
+          const stock = Math.max(0, Number(currentProduct?.stok) || 0);
+          button.disabled = stock <= 0;
         }
       });
     });

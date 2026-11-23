@@ -272,6 +272,15 @@ body.login-page {
 .demo-accounts-list {
     display: grid;
     gap: 4px;
+    max-height: 180px;
+    overflow-y: auto;
+    padding-right: 2px;
+    scrollbar-width: thin;
+}
+
+.demo-account-pill.is-inactive {
+    opacity: 0.65;
+    background: #f1f5f9;
 }
 
 .demo-account-pill {

@@ -433,6 +433,155 @@
     @media (max-width: 960px) {
       .create-grid { grid-template-columns: 1fr; }
     }
+
+    /* Pop Out Confirmation Modal */
+    .modal-backdrop {
+      position: fixed;
+      inset: 0;
+      background: rgba(15, 23, 42, 0.55);
+      backdrop-filter: blur(4px);
+      z-index: 1000;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 16px;
+      animation: modalFadeIn 0.18s ease;
+    }
+
+    .modal-card {
+      background: #ffffff;
+      border-radius: 16px;
+      width: 100%;
+      max-width: 480px;
+      padding: 24px;
+      box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+      display: flex;
+      flex-direction: column;
+      animation: modalScaleUp 0.18s ease;
+    }
+
+    @keyframes modalFadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+
+    @keyframes modalScaleUp {
+      from { opacity: 0; transform: scale(0.95); }
+      to { opacity: 1; transform: scale(1); }
+    }
+
+    .modal-header {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      margin-bottom: 18px;
+    }
+
+    .modal-icon-bubble {
+      width: 48px;
+      height: 48px;
+      border-radius: 12px;
+      background: #e0f2fe;
+      color: #0284c7;
+      display: grid;
+      place-items: center;
+      flex-shrink: 0;
+    }
+
+    .modal-title-wrap h3 {
+      font-size: 17px;
+      font-weight: 750;
+      color: #0f172a;
+    }
+
+    .modal-title-wrap p {
+      font-size: 12.5px;
+      color: var(--text-muted);
+      margin-top: 2px;
+    }
+
+    .modal-review-card {
+      background: #f8fafc;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 14px 16px;
+      margin-bottom: 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .modal-review-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 13px;
+    }
+
+    .modal-review-label {
+      color: var(--text-muted);
+      font-weight: 500;
+    }
+
+    .modal-review-val {
+      color: #0f172a;
+      font-weight: 600;
+      text-align: right;
+    }
+
+    .modal-note-box {
+      font-size: 12px;
+      color: #0369a1;
+      background: #f0f9ff;
+      border: 1px solid #bae6fd;
+      border-radius: 8px;
+      padding: 10px 12px;
+      margin-bottom: 20px;
+      line-height: 1.4;
+      display: flex;
+      gap: 8px;
+      align-items: flex-start;
+    }
+
+    .modal-btn-row {
+      display: flex;
+      gap: 10px;
+      justify-content: flex-end;
+    }
+
+    .modal-btn-cancel {
+      padding: 9px 18px;
+      border-radius: 8px;
+      font-size: 13px;
+      font-weight: 600;
+      color: #475569;
+      background: #f1f5f9;
+      border: 1px solid #cbd5e1;
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+    .modal-btn-cancel:hover {
+      background: #e2e8f0;
+      color: #0f172a;
+    }
+
+    .modal-btn-confirm {
+      padding: 9px 20px;
+      border-radius: 8px;
+      font-size: 13px;
+      font-weight: 600;
+      color: #ffffff;
+      background: var(--primary);
+      border: 0;
+      cursor: pointer;
+      transition: all 0.15s ease;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .modal-btn-confirm:hover {
+      background: var(--primary-hover);
+    }
   </style>
 </head>
 <body>
@@ -469,7 +618,7 @@
         $cancelUrl = Route::has('superadmin.dashboard') ? route('superadmin.dashboard') : url('/superadmin/dashboard');
       @endphp
 
-      <form action="{{ $formActionUrl }}" method="POST">
+      <form action="{{ $formActionUrl }}" method="POST" id="formBuatAkun">
         @csrf
 
         <div class="create-grid">
@@ -617,7 +766,7 @@
               <span class="footer-review-text">Periksa kembali informasi sebelum menyimpan.</span>
               <div class="footer-btns">
                 <a href="{{ $cancelUrl }}" class="btn-cancel">Batal</a>
-                <button type="submit" class="btn-submit">
+                <button type="button" class="btn-submit" onclick="openCreateAccountModal()">
                   <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
                   <span>Buat akun</span>
                 </button>
@@ -742,6 +891,137 @@
     }
 
     roleSelect.addEventListener('change', updateRolePreview);
+
+    function openCreateAccountModal() {
+      const form = document.getElementById('formBuatAkun');
+      if (form && !form.checkValidity()) {
+        form.reportValidity();
+        return;
+      }
+
+      const pass = document.getElementById('password').value;
+      const passConf = document.getElementById('password_confirmation').value;
+      if (pass !== passConf) {
+        const passConfInput = document.getElementById('password_confirmation');
+        passConfInput.setCustomValidity('Konfirmasi kata sandi tidak cocok dengan kata sandi.');
+        passConfInput.reportValidity();
+        passConfInput.addEventListener('input', function() {
+          this.setCustomValidity('');
+        }, { once: true });
+        return;
+      }
+
+      // Isi ringkasan pada pop out card
+      document.getElementById('reviewNamaLengkap').textContent = document.getElementById('nama_lengkap').value || '-';
+      document.getElementById('reviewEmail').textContent = document.getElementById('email').value || '-';
+      document.getElementById('reviewUsername').textContent = '@' + (document.getElementById('username').value || '-');
+
+      const roleVal = document.getElementById('roleSelect').value;
+      const roleLabel = roleVal === 'superadmin' ? 'Super Admin' : (roleVal === 'admin' ? 'Admin' : 'Customer');
+      document.getElementById('reviewRole').innerHTML = `<span class="demo-account-badge ${roleVal}">${roleLabel}</span>`;
+
+      const statusVal = document.getElementById('statusSelect').value;
+      const isAktif = statusVal === 'active' || statusVal === 'Aktif';
+      document.getElementById('reviewStatus').innerHTML = isAktif
+        ? '<span style="color:#16a34a; font-weight:700;">Aktif</span>'
+        : '<span style="color:#dc2626; font-weight:700;">Nonaktif</span>';
+
+      const mustChange = document.querySelector('input[name="must_change_password"]').checked;
+      document.getElementById('reviewMustChange').textContent = mustChange ? 'Ya' : 'Tidak';
+
+      const modal = document.getElementById('createAccountModal');
+      if (modal) {
+        modal.style.display = 'flex';
+        document.body.style.overflow = 'hidden';
+      }
+    }
+
+    function closeCreateAccountModal() {
+      const modal = document.getElementById('createAccountModal');
+      if (modal) {
+        modal.style.display = 'none';
+        document.body.style.overflow = '';
+      }
+    }
+
+    function submitCreateAccountForm() {
+      const form = document.getElementById('formBuatAkun');
+      if (form) {
+        form.submit();
+      }
+    }
+
+    document.getElementById('createAccountModal')?.addEventListener('click', function(e) {
+      if (e.target === this) closeCreateAccountModal();
+    });
+
+    document.addEventListener('keydown', function(e) {
+      if (e.key === 'Escape') closeCreateAccountModal();
+    });
   </script>
+
+  <!-- Pop Out Confirmation Modal -->
+  <div class="modal-backdrop" id="createAccountModal" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+    <div class="modal-card">
+      <div class="modal-header">
+        <div class="modal-icon-bubble">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+            <circle cx="8.5" cy="7" r="4"/>
+            <line x1="20" y1="8" x2="20" y2="14"/>
+            <line x1="23" y1="11" x2="17" y2="11"/>
+          </svg>
+        </div>
+        <div class="modal-title-wrap">
+          <h3 id="modalTitle">Konfirmasi Buat Akun</h3>
+          <p>Pastikan informasi akun baru sudah benar sebelum disimpan.</p>
+        </div>
+      </div>
+
+      <div class="modal-review-card">
+        <div class="modal-review-row">
+          <span class="modal-review-label">Nama Lengkap</span>
+          <span class="modal-review-val" id="reviewNamaLengkap">-</span>
+        </div>
+        <div class="modal-review-row">
+          <span class="modal-review-label">Email</span>
+          <span class="modal-review-val" id="reviewEmail">-</span>
+        </div>
+        <div class="modal-review-row">
+          <span class="modal-review-label">Username</span>
+          <span class="modal-review-val" id="reviewUsername">-</span>
+        </div>
+        <div class="modal-review-row">
+          <span class="modal-review-label">Role</span>
+          <span class="modal-review-val" id="reviewRole">-</span>
+        </div>
+        <div class="modal-review-row">
+          <span class="modal-review-label">Status Akun</span>
+          <span class="modal-review-val" id="reviewStatus">-</span>
+        </div>
+        <div class="modal-review-row">
+          <span class="modal-review-label">Wajib Ganti Password</span>
+          <span class="modal-review-val" id="reviewMustChange">-</span>
+        </div>
+      </div>
+
+      <div class="modal-note-box">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="flex-shrink:0; margin-top:1px;">
+          <circle cx="12" cy="12" r="10"/>
+          <line x1="12" y1="16" x2="12" y2="12"/>
+          <line x1="12" y1="8" x2="12.01" y2="8"/>
+        </svg>
+        <span>Akun ini akan langsung dapat masuk ke sistem dan tercatat otomatis pada <strong>Action Log</strong>.</span>
+      </div>
+
+      <div class="modal-btn-row">
+        <button type="button" class="modal-btn-cancel" onclick="closeCreateAccountModal()">Periksa Kembali</button>
+        <button type="button" class="modal-btn-confirm" onclick="submitCreateAccountForm()">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+          <span>Ya, Buat Akun</span>
+        </button>
+      </div>
+    </div>
+  </div>
 </body>
 </html>

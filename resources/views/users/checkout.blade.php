@@ -226,6 +226,7 @@
     };
     const requestedProductId = @json(request()->query('product_id'));
     const requestedQuantity = Math.max(1, Number(@json(request()->query('quantity', 1))) || 1);
+    const selectedItemIds = (@json(\Illuminate\Support\Arr::wrap(request()->query('items', []))) || []).map(id => String(id));
     const form = document.getElementById("checkout-form");
     const errorBox = document.getElementById("checkout-error");
     const submitButton = document.getElementById("submit-checkout");
@@ -280,7 +281,11 @@
     };
 
     const displayedItems = () => {
-      const items = (cartData?.items || []).map(item => ({
+      let rawItems = cartData?.items || [];
+      if (!stagedProduct && selectedItemIds.length > 0) {
+        rawItems = rawItems.filter(item => selectedItemIds.includes(String(item.id_item_keranjang)));
+      }
+      const items = rawItems.map(item => ({
         cartItem: item,
         product: item.produk,
         quantity: Number(item.jumlah) || 0
@@ -434,13 +439,17 @@
         await prepareCsrf();
         const address = await getOrCreateAddress();
         await syncStagedProduct();
+        const checkoutPayload = {
+          id_alamat: address.id_alamat,
+          biaya_pengiriman: Number(form.elements.shipping.value) || 0,
+          pajak: 0
+        };
+        if (!stagedProduct && selectedItemIds.length > 0) {
+          checkoutPayload.item_ids = selectedItemIds.map(id => Number(id));
+        }
         const order = await request(api.checkout, {
           method: "POST",
-          body: JSON.stringify({
-            id_alamat: address.id_alamat,
-            biaya_pengiriman: Number(form.elements.shipping.value) || 0,
-            pajak: 0
-          })
+          body: JSON.stringify(checkoutPayload)
         });
         sessionStorage.setItem("checkoutOrder", JSON.stringify(order));
         const redirectUrl = api.success + (order && order.id_pesanan ? '?order_id=' + encodeURIComponent(order.id_pesanan) : '');

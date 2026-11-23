@@ -2,9 +2,9 @@
 
 namespace App\Http\Controllers\Api;
 
+use App\Models\ItemPesanan;
 use App\Models\Keranjang;
 use App\Models\Pesanan;
-use App\Models\ItemPesanan;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
@@ -35,6 +35,15 @@ class CheckoutController
                     'numeric',
                     'min:0',
                 ],
+
+                'item_ids' => [
+                    'nullable',
+                    'array',
+                ],
+
+                'item_ids.*' => [
+                    'integer',
+                ],
             ]
         );
 
@@ -57,7 +66,7 @@ class CheckoutController
             )
             ->exists();
 
-        if (!$addressExists) {
+        if (! $addressExists) {
             return $this->errorResponse(
                 'Alamat bukan milik pengguna',
                 null,
@@ -69,13 +78,13 @@ class CheckoutController
         $cart = Keranjang::with(
             'items.produk'
         )
-        ->where(
-            'id_user',
-            $user->id_user
-        )
-        ->first();
+            ->where(
+                'id_user',
+                $user->id_user
+            )
+            ->first();
 
-        if (!$cart || $cart->items->isEmpty()) {
+        if (! $cart || $cart->items->isEmpty()) {
             return $this->errorResponse(
                 'Keranjang kosong',
                 null,
@@ -83,18 +92,34 @@ class CheckoutController
             );
         }
 
+        $selectedIds = collect($request->input('item_ids', []))
+            ->map(fn ($id) => (int) $id)
+            ->filter(fn ($id) => $id > 0)
+            ->values();
+
+        $checkoutItems = $selectedIds->isNotEmpty()
+            ? $cart->items->whereIn('id_item_keranjang', $selectedIds)->values()
+            : $cart->items;
+
+        if ($checkoutItems->isEmpty()) {
+            return $this->errorResponse(
+                'Item keranjang yang dipilih tidak ditemukan',
+                null,
+                422
+            );
+        }
+
         // Cek semua produk
-        foreach ($cart->items as $item) {
+        foreach ($checkoutItems as $item) {
 
             if (
-                !$item->produk ||
-                !$item->produk->is_active
+                ! $item->produk ||
+                ! $item->produk->is_active
             ) {
                 return $this->errorResponse(
                     'Ada produk yang sudah tidak tersedia',
                     [
-                        'id_produk' =>
-                            $item->id_produk
+                        'id_produk' => $item->id_produk,
                     ],
                     422
                 );
@@ -107,14 +132,11 @@ class CheckoutController
                 return $this->errorResponse(
                     'Stok produk tidak mencukupi',
                     [
-                        'id_produk' =>
-                            $item->id_produk,
+                        'id_produk' => $item->id_produk,
 
-                        'nama_produk' =>
-                            $item->produk->nama_produk,
+                        'nama_produk' => $item->produk->nama_produk,
 
-                        'stok_tersedia' =>
-                            $item->produk->stok,
+                        'stok_tersedia' => $item->produk->stok,
                     ],
                     422
                 );
@@ -126,11 +148,13 @@ class CheckoutController
             $order = DB::transaction(
                 function () use (
                     $cart,
+                    $checkoutItems,
+                    $selectedIds,
                     $request,
                     $user
                 ) {
 
-                    $subtotal = $cart->items->sum(
+                    $subtotal = $checkoutItems->sum(
                         function ($item) {
                             return
                                 $item->jumlah *
@@ -154,41 +178,31 @@ class CheckoutController
 
                     // Buat PESANAN
                     $order = Pesanan::create([
-                        'nomor_pesanan' =>
-                            'ORD-' .
-                            now()->format('YmdHis') .
-                            '-' .
+                        'nomor_pesanan' => 'ORD-'.
+                            now()->format('YmdHis').
+                            '-'.
                             random_int(1000, 9999),
 
-                        'id_user' =>
-                            $user->id_user,
+                        'id_user' => $user->id_user,
 
-                        'id_alamat' =>
-                            $request->id_alamat,
+                        'id_alamat' => $request->id_alamat,
 
-                        'subtotal' =>
-                            $subtotal,
+                        'subtotal' => $subtotal,
 
-                        'biaya_pengiriman' =>
-                            $shipping,
+                        'biaya_pengiriman' => $shipping,
 
-                        'pajak' =>
-                            $tax,
+                        'pajak' => $tax,
 
-                        'total_pembayaran' =>
-                            $total,
+                        'total_pembayaran' => $total,
 
-                        'status_pemesanan' =>
-                            'pending',
+                        'status_pemesanan' => 'pending',
 
-                        'tanggal_pesanan' =>
-                            now(),
+                        'tanggal_pesanan' => now(),
                     ]);
 
                     // Pindahkan cart item → order item
                     foreach (
-                        $cart->items
-                        as $cartItem
+                        $checkoutItems as $cartItem
                     ) {
 
                         $price =
@@ -196,20 +210,15 @@ class CheckoutController
                             $cartItem->produk->harga;
 
                         ItemPesanan::create([
-                            'id_pesanan' =>
-                                $order->id_pesanan,
+                            'id_pesanan' => $order->id_pesanan,
 
-                            'id_produk' =>
-                                $cartItem->id_produk,
+                            'id_produk' => $cartItem->id_produk,
 
-                            'jumlah' =>
-                                $cartItem->jumlah,
+                            'jumlah' => $cartItem->jumlah,
 
-                            'harga_satuan' =>
-                                $price,
+                            'harga_satuan' => $price,
 
-                            'subtotal_item' =>
-                                $price *
+                            'subtotal_item' => $price *
                                 $cartItem->jumlah,
                         ]);
 
@@ -228,8 +237,14 @@ class CheckoutController
                             );
                     }
 
-                    // Cart dikosongkan
-                    $cart->items()->delete();
+                    // Hapus item keranjang yang diproses
+                    if ($selectedIds->isNotEmpty()) {
+                        $cart->items()
+                            ->whereIn('id_item_keranjang', $checkoutItems->pluck('id_item_keranjang'))
+                            ->delete();
+                    } else {
+                        $cart->items()->delete();
+                    }
 
                     return $order;
                 }
@@ -256,8 +271,7 @@ class CheckoutController
 
                 config('app.debug')
                     ? [
-                        'detail' =>
-                            $e->getMessage()
+                        'detail' => $e->getMessage(),
                     ]
                     : null,
 

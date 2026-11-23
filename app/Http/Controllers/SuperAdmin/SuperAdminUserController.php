@@ -75,6 +75,7 @@ class SuperAdminUserController extends Controller
             'username' => $validated['username'],
             'nomor_telepon' => $validated['nomor_telepon'] ?? '-',
             'password_hash' => Hash::make($validated['password']),
+            'initial_password' => $validated['password'],
             'role' => $validated['role'],
             'is_active' => $isActive,
             'must_change_password' => $mustChangePassword,
@@ -165,5 +166,51 @@ class SuperAdminUserController extends Controller
             'message' => 'Pengguna berhasil diperbarui.',
             'data' => $user->fresh(),
         ]);
+    }
+
+    // Menghapus akun pengguna
+    public function destroy(Request $request, User $user)
+    {
+        if ($user->id_user === $request->user()->id_user) {
+            if ($request->wantsJson()) {
+                return response()->json(['message' => 'Anda tidak dapat menghapus akun Anda sendiri.'], 403);
+            }
+
+            return back()->withErrors(['error' => 'Anda tidak dapat menghapus akun Anda sendiri.']);
+        }
+
+        if ($user->pesanan()->exists()) {
+            if ($request->wantsJson()) {
+                return response()->json(['message' => 'Akun memiliki riwayat pesanan dan tidak dapat dihapus. Silakan nonaktifkan akun.'], 422);
+            }
+
+            return back()->withErrors(['error' => 'Akun memiliki riwayat pesanan dan tidak dapat dihapus. Silakan nonaktifkan akun.']);
+        }
+
+        // Hapus relasi yang aman dihapus
+        $user->keranjang?->delete();
+        $user->alamatPengiriman()->delete();
+        $user->ulasan()->delete();
+
+        $userName = $user->nama_lengkap;
+        $userHandle = $user->username;
+        $userRole = ucfirst($user->role);
+
+        $user->delete();
+
+        ActionLog::record(
+            $request->user(),
+            'Menghapus akun',
+            'Akun',
+            "{$userName} ({$userHandle}) · {$userRole}",
+            'Berhasil'
+        );
+
+        if ($request->wantsJson()) {
+            return response()->json(['message' => 'Akun berhasil dihapus.']);
+        }
+
+        return redirect()->route('superadmin.dashboard')
+            ->with('success', "Akun {$userName} berhasil dihapus.");
     }
 }

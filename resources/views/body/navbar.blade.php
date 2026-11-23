@@ -104,6 +104,7 @@
   }
 
   .nav-cart-btn {
+    position: relative;
     display: grid;
     place-items: center;
     width: 38px;
@@ -114,6 +115,26 @@
     background: #ffffff;
     transition: all 0.15s ease;
     text-decoration: none;
+  }
+  .nav-cart-badge {
+    position: absolute;
+    top: -6px;
+    right: -6px;
+    min-width: 18px;
+    height: 18px;
+    padding: 0 5px;
+    border-radius: 999px;
+    background: #1673e6;
+    color: #ffffff;
+    font-size: 10.5px;
+    font-weight: 700;
+    display: grid;
+    place-items: center;
+    border: 2px solid #ffffff;
+    line-height: 1;
+  }
+  .nav-cart-badge[hidden] {
+    display: none !important;
   }
   .nav-cart-btn:hover,
   .nav-cart-btn.active {
@@ -296,12 +317,21 @@
     @endif
   </form>
 
+  @php
+    $navCartCount = 0;
+    if (auth()->check()) {
+      $navCart = \App\Models\Keranjang::where('id_user', auth()->id())->first();
+      $navCartCount = $navCart ? (int) $navCart->items()->sum('jumlah') : 0;
+    }
+  @endphp
+
   <div class="navbar-nav-right">
     <a href="{{ route('cart.index') }}" class="nav-cart-btn {{ request()->routeIs('cart.index') ? 'active' : '' }}" aria-label="Keranjang" title="Keranjang Belanja">
       <svg style="width:19px;height:19px;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
         <circle cx="9" cy="20" r="1.5"/><circle cx="18" cy="20" r="1.5"/>
         <path d="M2 3h3l2.6 12.4a1 1 0 0 0 1 .8h8.8a1 1 0 0 0 1-.8L20 7H6"/>
       </svg>
+      <span id="nav-cart-badge" class="nav-cart-badge" @if ($navCartCount <= 0) hidden @endif>{{ $navCartCount }}</span>
     </a>
 
     @auth

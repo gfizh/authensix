@@ -78,7 +78,14 @@
     border-bottom: 1px solid var(--line);
   }
   .item:last-child { border-bottom: 0; }
-  .thumb { width: 88px; height: 70px; border-radius: 8px; background: var(--placeholder); }
+  .thumb {
+    width: 88px; height: 70px; border-radius: 8px;
+    background: #f8fafc; border: 1px solid var(--line);
+    overflow: hidden; display: flex; align-items: center; justify-content: center;
+  }
+  .thumb img { width: 100%; height: 100%; object-fit: contain; display: block; }
+  .thumb-placeholder { font-size: 10px; color: var(--muted); text-align: center; padding: 4px; }
+  .info .name:hover { color: var(--accent); }
   .info .name { font-size: 13px; font-weight: 600; line-height: 1.4;
     display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
   .info .varian { font-size: 11px; color: var(--muted); margin-top: 3px; }
@@ -153,7 +160,11 @@
   <h1>Keranjang Belanja</h1>
 
   @if(session('success'))
-    <p style="font-size:12px;color:#1e7e34;margin-bottom:12px">{{ session('success') }}</p>
+    <p style="font-size:12px;color:#1e7e34;background:#dcfce7;border:1px solid #86efac;padding:10px 14px;border-radius:8px;margin-bottom:14px">{{ session('success') }}</p>
+  @endif
+
+  @if(session('error'))
+    <p style="font-size:12px;color:#b91c1c;background:#fee2e2;border:1px solid #fca5a5;padding:10px 14px;border-radius:8px;margin-bottom:14px">{{ session('error') }}</p>
   @endif
 
   @forelse($items as $item)
@@ -178,10 +189,16 @@
         <article class="item" data-harga="{{ $item->harga }}">
           <input type="checkbox" class="check-item" value="{{ $item->id }}" checked aria-label="Pilih {{ $item->nama }}">
 
-          <div class="thumb"></div>
+          <a href="{{ route('produk.detail', $item->id_produk) }}" class="thumb">
+            @if(!empty($item->gambar_url))
+              <img src="{{ $item->gambar_url }}" alt="{{ $item->nama }}">
+            @else
+              <span class="thumb-placeholder">No Image</span>
+            @endif
+          </a>
 
           <div class="info">
-            <div class="name">{{ $item->nama }}</div>
+            <a href="{{ route('produk.detail', $item->id_produk) }}" class="name">{{ $item->nama }}</a>
             @if($item->varian)
               <div class="varian">Varian: {{ $item->varian }}</div>
             @endif
@@ -193,11 +210,11 @@
             <form action="{{ route('cart.update', $item->id) }}" method="POST" class="qty">
               @csrf
               @method('PATCH')
-              <button type="submit" name="qty" value="{{ $item->qty - 1 }}"
+              <button type="submit" name="btn_qty" value="{{ $item->qty - 1 }}"
                       {{ $item->qty <= 1 ? 'disabled' : '' }} aria-label="Kurangi">−</button>
-              <input type="number" name="qty" value="{{ $item->qty }}" min="1" max="{{ $item->stok }}"
+              <input type="number" name="qty" value="{{ $item->qty }}" min="1" max="{{ max(1, $item->stok) }}"
                      class="qty-input" aria-label="Jumlah" onchange="this.form.submit()">
-              <button type="submit" name="qty" value="{{ $item->qty + 1 }}"
+              <button type="submit" name="btn_qty" value="{{ $item->qty + 1 }}"
                       {{ $item->qty >= $item->stok ? 'disabled' : '' }} aria-label="Tambah">+</button>
             </form>
 
@@ -224,12 +241,11 @@
         <div class="row"><span>Subtotal</span><span id="sum-subtotal">Rp0</span></div>
         <div class="row total"><span>Total</span><span id="sum-total">Rp0</span></div>
 
-        <form action="{{ route('checkout') }}" method="POST" id="form-checkout">
-          @csrf
+        <form action="{{ route('checkout') }}" method="GET" id="form-checkout">
           <div id="selected-inputs"></div>
-          <a href="{{ url('/checkout') }}" type="submit" class="btn btn-primary" id="btn-checkout">Checkout</a>
+          <button type="submit" class="btn btn-primary" id="btn-checkout">Checkout</button>
         </form>
-        <a href="{{ url('/dashboard') }}" class="btn btn-outline">Lanjut Belanja</a>
+        <a href="{{ route('dashboard') }}" class="btn btn-outline">Lanjut Belanja</a>
       </aside>
     </div>
     @endif

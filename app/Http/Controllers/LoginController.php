@@ -3,12 +3,23 @@
 namespace App\Http\Controllers;
 
 use App\Models\ActionLog;
+use App\Models\User;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\View\View;
 
 class LoginController extends Controller
 {
+    public function create(): View
+    {
+        $quickLoginUsers = User::query()
+            ->orderBy('id_user')
+            ->get();
+
+        return view('login', compact('quickLoginUsers'));
+    }
+
     public function store(Request $request): RedirectResponse
     {
         $credentials = $request->validate([

@@ -9,6 +9,7 @@ use App\Http\Controllers\Admin\ProductController as AdminProductController;
 use App\Http\Controllers\Admin\ReviewController;
 use App\Http\Controllers\Admin\ShipmentController;
 use App\Http\Controllers\Admin\UserController as AdminUserController;
+use App\Http\Controllers\CartController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\LoginController;
 use App\Http\Controllers\OrderHistoryController;
@@ -42,7 +43,7 @@ Route::get('/', function (Request $request) {
     return redirect()->route('login');
 })->name('home');
 
-Route::view('/login', 'login')
+Route::get('/login', [LoginController::class, 'create'])
     ->middleware('guest')
     ->name('login');
 
@@ -102,48 +103,25 @@ Route::get('/kategori', function () {
 // CART
 // =====================================================
 
-Route::get('/keranjang', function () {
-    $items = collect([
-        [
-            'id' => 1,
-            'nama' => 'GIGABYTE VGA NVIDIA GEFORCE RTX 5060 TI EAGLE ICE 16GB GDDR7 OC WHITE',
-            'varian' => '16GB GDDR7 OC',
-            'harga' => 12430000,
-            'qty' => 1,
-            'stok' => 1,
-        ],
-        [
-            'id' => 2,
-            'nama' => 'Hardisk PC/Laptop 160GB SATA',
-            'varian' => null,
-            'harga' => 250000,
-            'qty' => 2,
-            'stok' => 10,
-        ],
-        [
-            'id' => 3,
-            'nama' => 'Monitor PC 24inch Multimedia',
-            'varian' => 'Hitam',
-            'harga' => 1500000,
-            'qty' => 1,
-            'stok' => 4,
-        ],
-    ])->map(fn ($item) => (object) $item);
-
-    return view('users.cart', ['items' => $items]);
-})
+Route::get('/keranjang', [CartController::class, 'index'])
     ->middleware('auth')
     ->name('cart.index');
 
-Route::patch('/keranjang/{id}', fn () => back())
+Route::post('/keranjang', [CartController::class, 'store'])
+    ->middleware('auth')
+    ->name('cart.store');
+
+Route::patch('/keranjang/{id}', [CartController::class, 'update'])
+    ->whereNumber('id')
     ->middleware('auth')
     ->name('cart.update');
 
-Route::delete('/keranjang/{id}', fn () => back())
+Route::delete('/keranjang/{id}', [CartController::class, 'destroy'])
+    ->whereNumber('id')
     ->middleware('auth')
     ->name('cart.destroy');
 
-Route::delete('/keranjang', fn () => back())
+Route::delete('/keranjang', [CartController::class, 'clear'])
     ->middleware('auth')
     ->name('cart.clear');
 
@@ -349,6 +327,11 @@ Route::middleware(['auth', 'superadmin'])
             '/users/{user}',
             [SuperAdminUserController::class, 'update']
         )->name('users.update');
+
+        Route::delete(
+            '/users/{user}',
+            [SuperAdminUserController::class, 'destroy']
+        )->name('users.destroy');
 
         // Action log
         Route::get(

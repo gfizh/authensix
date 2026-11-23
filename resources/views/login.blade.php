@@ -95,25 +95,43 @@
                     <span>Continue With Google</span>
                 </button>
 
+                @php
+                    $usersList = $quickLoginUsers ?? \App\Models\User::orderBy('id_user')->get();
+                @endphp
+
                 <div class="demo-accounts-box">
-                    <span class="demo-accounts-title">Akun Pengujian Demo (Klik untuk Isi):</span>
+                    <span class="demo-accounts-title">Akun Pengujian Demo (Klik untuk Isi &middot; {{ $usersList->count() }} Akun):</span>
                     <div class="demo-accounts-list">
-                        <button type="button" class="demo-account-pill" data-demo-user="ahmad" data-demo-pass="password" title="Klik untuk mengisi akun Ahmad Hafizh">
-                            <span class="demo-account-badge customer">Customer</span>
-                            <span class="demo-account-name">Ahmad Hafizh</span>
-                        </button>
-                        <button type="button" class="demo-account-pill" data-demo-user="admin" data-demo-pass="admin123" title="Klik untuk mengisi akun Admin Store">
-                            <span class="demo-account-badge admin">Admin</span>
-                            <span class="demo-account-name">Admin Store</span>
-                        </button>
-                        <button type="button" class="demo-account-pill" data-demo-user="guruhhhh" data-demo-pass="superadmin123" title="Klik untuk mengisi akun Super Admin (GURUHHHH)">
-                            <span class="demo-account-badge superadmin">Super Admin</span>
-                            <span class="demo-account-name">GURUHHHH</span>
-                        </button>
-                        <button type="button" class="demo-account-pill" data-demo-user="budi" data-demo-pass="password" title="Klik untuk mengisi akun Budi Santoso">
-                            <span class="demo-account-badge customer">Customer</span>
-                            <span class="demo-account-name">Budi Santoso</span>
-                        </button>
+                        @forelse ($usersList as $demoUser)
+                            @php
+                                $roleClass = strtolower($demoUser->role);
+                                $roleLabel = match ($roleClass) {
+                                    'superadmin' => 'Super Admin',
+                                    'admin' => 'Admin',
+                                    default => 'Customer',
+                                };
+                                $quickPass = $demoUser->quick_login_password;
+                            @endphp
+                            <button
+                                type="button"
+                                class="demo-account-pill {{ !$demoUser->is_active ? 'is-inactive' : '' }}"
+                                data-demo-user="{{ $demoUser->username }}"
+                                data-demo-pass="{{ $quickPass }}"
+                                title="Klik untuk mengisi akun {{ $demoUser->nama_lengkap }} ({{ '@' . $demoUser->username }}){{ !$demoUser->is_active ? ' - Nonaktif' : '' }}"
+                            >
+                                <span class="demo-account-badge {{ $roleClass }}">
+                                    {{ $roleLabel }}
+                                </span>
+                                <span class="demo-account-name">
+                                    {{ $demoUser->nama_lengkap ?? $demoUser->username }}
+                                    @if (!$demoUser->is_active)
+                                        <small style="color: #ef4444; font-size: 9px; font-weight: normal;">(Nonaktif)</small>
+                                    @endif
+                                </span>
+                            </button>
+                        @empty
+                            <p style="font-size: 11px; color: #94a3b8; text-align: center; margin: 4px 0;">Belum ada akun di database.</p>
+                        @endforelse
                     </div>
                 </div>
             </section>

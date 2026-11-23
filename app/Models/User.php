@@ -19,6 +19,7 @@ class User extends Authenticatable
         'username',
         'email',
         'password_hash',
+        'initial_password',
         'role',
         'is_active',
         'must_change_password',
@@ -26,7 +27,29 @@ class User extends Authenticatable
 
     protected $hidden = [
         'password_hash',
+        'initial_password',
     ];
+
+    public function getQuickLoginPasswordAttribute(): string
+    {
+        if (! empty($this->initial_password)) {
+            return $this->initial_password;
+        }
+
+        if ($this->username === 'admin') {
+            return 'admin123';
+        }
+
+        if ($this->username === 'guruhhhh' || $this->role === 'superadmin') {
+            return 'superadmin123';
+        }
+
+        if ($this->role === 'admin') {
+            return 'admin123';
+        }
+
+        return 'password';
+    }
 
     protected function casts(): array
     {
